@@ -1,10 +1,11 @@
 name: "Mass rebuild reporter"
 
 on:
-  schedule: "40 * * * *"
+  schedule:
+    - cron: "40 * * * *"
   workflow_dispatch:
 
-permisons:
+permissons:
   contents: read
 
 jobs:
