@@ -28,7 +28,7 @@ jobs:
 
 
       - name: Create Report
-        if: steps.check-existing.outputs.result != "skip"
+        if: steps.check-existing.outputs.result != 'skip'
         uses: actions/github-script@v7
         with:
           script: |
