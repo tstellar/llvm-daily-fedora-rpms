@@ -5,7 +5,7 @@ on:
     - cron: "40 * * * *"
   workflow_dispatch:
 
-permissons:
+permissions:
   contents: read
 
 jobs:
