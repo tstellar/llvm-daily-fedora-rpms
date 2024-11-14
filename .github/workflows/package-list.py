@@ -230,7 +230,7 @@ def main():
         snapshot_project = select_snapshot_project(copr_client)
         start_rebuild(project_owner, project_name, copr_client, pkgs_to_test, snapshot_project)
     elif args.command == 'get-regressions':
-        start_time = datetime.datetime.fromisoformat(args.start_date, "%Y-%m-%d")
+        start_time = datetime.datetime.fromisoformat(args.start_date)
         pkg_failures = get_monthly_rebuild_regressions(project_owner, project_name, copr_client, start_time)
         print(json.dumps(pkg_failures))
 
