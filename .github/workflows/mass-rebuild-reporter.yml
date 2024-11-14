@@ -41,7 +41,7 @@ jobs:
       - name: Collect Regressions
         id: regressions
         run: |
-          sudo apt-get install python3-dnf python3-copr
+          sudo dnf install python3-dnf python3-copr
           {
             echo 'REGRESSIONS<<EOF'
             python3 .github/workflows/package-list.py get-regressions --start-date 2024-11-11
