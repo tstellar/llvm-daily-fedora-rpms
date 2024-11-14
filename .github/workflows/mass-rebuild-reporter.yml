@@ -43,7 +43,7 @@ jobs:
             console.log(issue);
             if (issue.state == "open")
               return "skip";
-            return issue.created_at
+            return issue.closed_at
 
       - name: Collect Regressions
         if: steps.check-existing.outputs.result != 'skip'

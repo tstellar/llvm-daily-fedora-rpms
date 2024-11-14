@@ -1,0 +1,27 @@
+name: "Mass Rebuild Runner"
+
+on:
+  schedule:
+    # Run on the first of every month.
+    - cron: 30 1 1 * *
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  start-rebuild:
+    runs-on: ubuntu-24.04
+    container:
+      image: "registry.fedoraproject.org/fedora:41"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            .github/workflows/package-list.py
+          sparse-checkout-cone-mode: false
+
+      - name: Start rebuild
+        run: |
+          sudo dnf install -y python3-dnf python3-copr
+          python3 .github/workflows/package-list.py rebuild
