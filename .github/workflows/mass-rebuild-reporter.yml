@@ -57,7 +57,7 @@ jobs:
             console.log(regressions);
             console.log("Done array");
             regressions.forEach(function(value){
-              comment.concat('\n', value.name);
-              comment.concat(' ', value.url);
+              comment = comment.concat('\n', value.name);
+              comment = comment.concat(' ', value.url);
             });
             console.log(comment);
