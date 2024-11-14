@@ -14,6 +14,13 @@ jobs:
     permissions:
       issues: write
     steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            .github/workflows/package-list.py
+          sparse-checkout-cone-mode: false
+
+
       - name: Check for existing report
         uses: actions/github-script@v7
         id: check-existing
@@ -34,7 +41,7 @@ jobs:
         run: |
           {
             echo 'REGRESSIONS<<EOF'
-            python3 package-list.py get-regressions --start-date 2024-11-11
+            python3 .github/workflows/package-list.py get-regressions --start-date 2024-11-11
             echo EOF
           } >> "$GITHUB_ENV"
 
