@@ -39,6 +39,7 @@ jobs:
       - name: Collect Regressions
         id: regressions
         run: |
+          pip install dnf copr
           {
             echo 'REGRESSIONS<<EOF'
             python3 .github/workflows/package-list.py get-regressions --start-date 2024-11-11
