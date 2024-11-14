@@ -54,6 +54,8 @@ jobs:
             var fs = require('fs');
             const regressions = await JSON.parse(fs.readFileSync('./regressions'));
             comment = "During the last mass rebuild, some packages failed:\n";
+            console.log(regressions);
+            console.log("Done array");
             regressions.forEach(function(value){
               comment.concat('\n', value.name);
               comment.concat(' ', value.url);
