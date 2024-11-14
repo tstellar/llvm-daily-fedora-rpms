@@ -12,7 +12,7 @@ jobs:
   check-for-rebuild:
     runs-on: ubuntu-24.04
     permissions:
-      issue: write
+      issues: write
     steps:
       - name: Check for existing report
         uses: actions/github-script@v7
