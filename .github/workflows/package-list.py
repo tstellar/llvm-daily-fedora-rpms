@@ -41,10 +41,12 @@ def get_pkgs(exclusions: Set[str]) -> Set[set]:
     q = base.sack.query(flags=hawkey.IGNORE_MODULAR_EXCLUDES)
     q = q.available()
     q = q.filter(requires=['clang', 'gcc', 'gcc-c++'])
+    print(q)
     pkgs = set([p.name for p in list(q)])
+    print(pkgs)
     return filter_llvm_pkgs(pkgs) - exclusions
 
-def get_monthly_rebuild_packages(project_owner: str, project_name: str, copr_client : copr.v3.Client, pkgs : Set[str]) -> Set[str]:
+def get_monthly_rebuild_packages(project_owner: str, project_name: str, copr_client : copr.v3.Client, candidate_pkgs : Set[str]) -> Set[str]:
     pkgs = set()
     for p in copr_client.package_proxy.get_list(project_owner, project_name, with_latest_succeeded_build = True, with_latest_build = True):
         latest_succeeded = p['builds']['latest_succeeded']
@@ -57,7 +59,7 @@ def get_monthly_rebuild_packages(project_owner: str, project_name: str, copr_cli
         if latest['id'] != latest_succeeded['id']:
             continue
         #print(p['name'])
-        if p['name'] not in pkgs:
+        if p['name'] not in candidate_pkgs:
             continue
         #print(latest)
         pkgs.add(p['name'])
