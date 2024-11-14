@@ -11,6 +11,8 @@ permissions:
 jobs:
   check-for-rebuild:
     runs-on: ubuntu-24.04
+    permissions:
+      issue: write
     steps:
       - name: Check for existing report
         uses: actions/github-script@v7
@@ -27,13 +29,23 @@ jobs:
                 return "skip"
             return "";
 
+      - name: Collect Regressions
+        id: regressions
+        run: |
+          {
+            echo 'REGRESSIONS<<EOF'
+            python3 package-list.py get-regressions --start-date 2024-11-11
+            echo EOF
+          } >> "$GITHUB_ENV"
 
       - name: Create Report
         if: steps.check-existing.outputs.result != 'skip'
         uses: actions/github-script@v7
+        env:
+          REGRESSIONS: ${{ steps.regressions.outputs.REGRESSIONS }}
         with:
           script: |
-            console.log("Create Report!")
+            console.log(process.env.REGRESSIONS)
 
 
 
