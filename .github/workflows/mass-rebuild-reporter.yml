@@ -41,12 +41,16 @@ jobs:
               return "2024-11-11";
             const issue = issues.data.items[0];
             console.log(issue);
+            if (issue.state == "open")
+              return "skip";
+            return issue.created_at
 
       - name: Collect Regressions
+        if: steps.check-existing.outputs.result != 'skip'
         id: regressions
         run: |
           sudo dnf install -y python3-dnf python3-copr
-          python3 .github/workflows/package-list.py get-regressions --start-date 2024-11-11 > regressions
+          python3 .github/workflows/package-list.py get-regressions --start-date ${{ steps.check-exisiting.outputs.results }} > regressions
 
       - name: Create Report
         if: steps.check-existing.outputs.result != 'skip'
