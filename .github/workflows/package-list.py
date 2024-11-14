@@ -27,56 +27,7 @@ This returns a list of packages we don't want to test.
 def get_exclusions() -> Set[str]:
     return set()
 
-"""
-Tier0 packages are packages in RHEL that use only clang for compiling C/C++ files.
-
-These packages are the top priority for testing.
-"""
-def get_tier0() -> Set[str]:
-    return {'dotnet6.0', 'dotnet7.0', 'dotnet8.0', 'dotnet9.0', 'qemu-kvm', 'golang', 'wasi-lbc'}
-
-"""
-Tier 1 packages are any packages in RHEL that have BuildRequires: clang
-"""
-def get_tier1(exclusions: Set[str] ) -> Set[str]:
-    base = dnf.Base()
-    conf = base.conf
-    for v in ['9', '10']:
-        base.repos.add_new_repo(f'buildroot-source-{v}', conf, baseurl=[f'http://download.eng.bos.redhat.com/rhel-{v}/nightly/BUILDROOT-{v}/latest-BUILDROOT-{v}-RHEL-{v}/compose/Buildroot/source/tree/'])
-        for c in 'AppStream', 'BaseOS', 'CRB':
-            base.repos.add_new_repo(f'{c}-source-{v}', conf, baseurl=[f'http://download.eng.bos.redhat.com/rhel-{v}/nightly/RHEL-{v}/latest-RHEL-{v}/compose/{c}/source/tree/'])
-    repos = base.repos.get_matching('*')
-    repos.disable()
-    repos = base.repos.get_matching('*-source*')
-    repos.enable()
-
-    base.fill_sack()
-    q = base.sack.query(flags=hawkey.IGNORE_MODULAR_EXCLUDES)
-    q = q.available()
-    q = q.filter(requires=['clang'])
-    pkgs = set([p.name for p in list(q)])
-    return filter_llvm_pkgs(pkgs) - exclusions
-
-"""
-"""
-def get_tier2(exclusions: Set[str]) -> Set[str]:
-    base = dnf.Base()
-    conf = base.conf
-    base.repos.add_new_repo('fedora-source', conf, baseurl=['https://dl.fedoraproject.org/pub/fedora/linux/releases/41/Everything/source/tree/'])
-    repos = base.repos.get_matching('*')
-    repos.disable()
-    repos = base.repos.get_matching('*-source*')
-    repos.enable()
-
-    base.fill_sack()
-    q = base.sack.query(flags=hawkey.IGNORE_MODULAR_EXCLUDES)
-    q = q.available()
-    q = q.filter(requires=['clang'])
-    pkgs = set([p.name for p in list(q)])
-    return filter_llvm_pkgs(pkgs) - exclusions
-
-
-def get_tier3(exclusions: Set[str]) -> Set[set]:
+def get_pkgs(exclusions: Set[str]) -> Set[set]:
     base = dnf.Base()
     conf = base.conf
     for c in 'AppStream', 'BaseOS', 'CRB', 'Extras':
@@ -93,23 +44,7 @@ def get_tier3(exclusions: Set[str]) -> Set[set]:
     pkgs = set([p.name for p in list(q)])
     return filter_llvm_pkgs(pkgs) - exclusions
 
-def get_tier4(exclusions: Set[str]) -> Set[str]:
-    base = dnf.Base()
-    conf = base.conf
-    base.repos.add_new_repo('fedora-source', conf, baseurl=['https://dl.fedoraproject.org/pub/fedora/linux/releases/41/Everything/source/tree/'])
-    repos = base.repos.get_matching('*')
-    repos.disable()
-    repos = base.repos.get_matching('*-source*')
-    repos.enable()
-
-    base.fill_sack()
-    q = base.sack.query(flags=hawkey.IGNORE_MODULAR_EXCLUDES)
-    q = q.available()
-    q = q.filter(requires=['clang', 'gcc', 'gcc-c++'])
-    pkgs = set([p.name for p in list(q)])
-    return filter_llvm_pkgs(pkgs) - exclusions
-
-def get_monthly_rebuild_packages(project_owner: str, project_name: str, copr_client : copr.v3.Client, tier3 : Set[str]) -> Set[str]:
+def get_monthly_rebuild_packages(project_owner: str, project_name: str, copr_client : copr.v3.Client, pkgs : Set[str]) -> Set[str]:
     pkgs = set()
     for p in copr_client.package_proxy.get_list(project_owner, project_name, with_latest_succeeded_build = True, with_latest_build = True):
         latest_succeeded = p['builds']['latest_succeeded']
@@ -122,7 +57,7 @@ def get_monthly_rebuild_packages(project_owner: str, project_name: str, copr_cli
         if latest['id'] != latest_succeeded['id']:
             continue
         #print(p['name'])
-        if p['name'] not in tier3:
+        if p['name'] not in pkgs:
             continue
         #print(latest)
         pkgs.add(p['name'])
@@ -206,27 +141,14 @@ def main():
     args = parser.parse_args()
 
 
-    #print(exclusions)
-    #print('Tier 0:', len(tier0), "\n", "\n".join(tier0))
-    #print('Tier 1:', len(tier1), "\n", "\n".join(tier1))
-    #print('Tier 2:', len(tier2), "\n", "\n".join(tier2))
-    #print('Tier 3:', len(tier3), "\n", "\n".join(tier3))
-    #print('Tier 4:', len(tier4), "\n", "\n".join(tier4))
-
-
     project_owner = 'tstellar'
     project_name = 'fedora-41-clang-19'
-    #copr_client = copr.v3.Client()
     copr_client = copr.v3.Client.create_from_config_file()
 
     if args.command == 'rebuild':
         exclusions = get_exclusions()
-        tier0 = get_tier0()
-        tier1 = get_tier1(exclusions | tier0)
-        tier2 = get_tier2(exclusions | tier0 | tier1)
-        tier3 = get_tier3(exclusions | tier0 | tier1 | tier2)
-        tier4 = get_tier4(exclusions | tier0 | tier1 | tier2 | tier3)
-        pkgs_to_test = get_monthly_rebuild_packages(project_owner, project_name, copr_client, tier0 | tier1 | tier2 | tier3)
+        pkgs = get_pkgs(exclusions)
+        pkgs_to_test = get_monthly_rebuild_packages(project_owner, project_name, copr_client, pkgs)
         snapshot_project = select_snapshot_project(copr_client)
         start_rebuild(project_owner, project_name, copr_client, pkgs_to_test, snapshot_project)
     elif args.command == 'get-regressions':

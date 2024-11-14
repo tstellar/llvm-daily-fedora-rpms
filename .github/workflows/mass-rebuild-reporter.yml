@@ -1,4 +1,4 @@
-name: "Mass rebuild reporter"
+name: "Mass Rebuild Reporter"
 
 on:
   schedule:
