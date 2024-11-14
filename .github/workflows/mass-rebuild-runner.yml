@@ -20,6 +20,15 @@ jobs:
           sparse-checkout: |
             .github/workflows/package-list.py
           sparse-checkout-cone-mode: false
+      
+      - name: Setup Copr config file
+        env:
+          # You need to have those secrets in your repo.
+          # See also: https://copr.fedorainfracloud.org/api/.
+          COPR_CONFIG_FILE: ${{ secrets.COPR_CONFIG }}
+        run: |
+          mkdir -p ~/.config
+          printf "$COPR_CONFIG_FILE" > ~/.config/copr
 
       - name: Start rebuild
         run: |
