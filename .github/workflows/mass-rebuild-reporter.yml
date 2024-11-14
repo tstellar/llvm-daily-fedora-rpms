@@ -52,8 +52,7 @@ jobs:
         with:
           script: |
             var fs = require('fs');
-            const data = await JSON.parse(fs.readFileSync('./regressions'));
-            const regressions = JSON.parse(data);
+            const regressions = await JSON.parse(fs.readFileSync('./regressions'));
             comment = "During the last mass rebuild, some packages failed:\n";
             regressions.forEach(function(value){
               comment.concat('\n', value.name);
