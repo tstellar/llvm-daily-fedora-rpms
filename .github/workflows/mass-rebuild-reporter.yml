@@ -42,11 +42,7 @@ jobs:
         id: regressions
         run: |
           sudo dnf install -y python3-dnf python3-copr
-          {
-            echo 'REGRESSIONS<<EOF'
-            python3 .github/workflows/package-list.py get-regressions --start-date 2024-11-11
-            echo EOF
-          } >> "$GITHUB_ENV"
+          python3 .github/workflows/package-list.py get-regressions --start-date 2024-11-11 > regressions
 
       - name: Create Report
         if: steps.check-existing.outputs.result != 'skip'
@@ -55,8 +51,6 @@ jobs:
           REGRESSIONS: ${{ steps.regressions.outputs.REGRESSIONS }}
         with:
           script: |
-            console.log(process.env.REGRESSIONS)
-
-
-
-
+            var fs = require('fs');
+            const regressions = await JSON.parse(fs.readFileSync('./regressions'));
+            console.log(regressions)
