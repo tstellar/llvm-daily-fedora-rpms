@@ -41,9 +41,7 @@ def get_pkgs(exclusions: Set[str]) -> Set[set]:
     q = base.sack.query(flags=hawkey.IGNORE_MODULAR_EXCLUDES)
     q = q.available()
     q = q.filter(requires=['clang', 'gcc', 'gcc-c++'])
-    print(q)
     pkgs = set([p.name for p in list(q)])
-    print(pkgs)
     return filter_llvm_pkgs(pkgs) - exclusions
 
 def get_monthly_rebuild_packages(project_owner: str, project_name: str, copr_client : copr.v3.Client, candidate_pkgs : Set[str]) -> Set[str]:
@@ -51,17 +49,12 @@ def get_monthly_rebuild_packages(project_owner: str, project_name: str, copr_cli
     for p in copr_client.package_proxy.get_list(project_owner, project_name, with_latest_succeeded_build = True, with_latest_build = True):
         latest_succeeded = p['builds']['latest_succeeded']
         latest = p['builds']['latest']
-        #print(p)
-        #print('before not succed',p['name'], latest_succeeded, latest)
         if not latest_succeeded:
             continue
-        #print('before latest', p['name'])
         if latest['id'] != latest_succeeded['id']:
             continue
-        #print(p['name'])
         if p['name'] not in candidate_pkgs:
             continue
-        #print(latest)
         pkgs.add(p['name'])
     return pkgs
 
@@ -97,7 +90,6 @@ def start_rebuild(project_owner: str, project_name: str, copr_client: copr.v3.Cl
         'background' : True,
     }
     print("Rebuilding", len(pkgs), 'packages')
-    pkgs=['zip']
     for p in pkgs:
         print("Rebuild", p)
         copr_client.build_proxy.create_from_distgit(project_owner, project_name,
@@ -117,11 +109,8 @@ def select_snapshot_project(copr_client: copr.v3.Client) -> str:
             p = copr_client.project_proxy.get(project_owner, project_name)
             if not p:
                 continue
-            #print(p)
             pkgs = copr_client.build_proxy.get_list(project_owner, project_name, 'llvm', status='succeeded')
             for pkg in pkgs:
-            #    print("PACKAGE")
-            #    print(pkg)
                 chroots.update(pkg['chroots'])
           
             print(project_name, chroots)
@@ -133,26 +122,42 @@ def select_snapshot_project(copr_client: copr.v3.Client) -> str:
     print("FAIL")
     return None
 
+def create_new_project(project_owner: str, project_name: str, copr_client: copr.v3.Client, target_chroots: list[str]):
+    copr_client.project_proxy.add(project_owner, project_name, chroots = target_chroots)
+    for c in target_chroots:
+        copr_client.project_chroot_proxy.edit(project_owner, project_name, c,
+                                              additional_packages=['fedora-clang-default-cc'],
+                                              with_opts=['toolchain_clang', 'clang_lto'])
+
+
 def main():
 
 
     parser = argparse.ArgumentParser()
     parser.add_argument('command', type=str, choices=['rebuild','get-regressions'])
-    parser.add_argument('--start-date', type=str, help='Date format: yyyy-mm-dd')
+    parser.add_argument('--start-date', type=str, help='Any ISO date format is accepted')
 
     args = parser.parse_args()
-
-
-    project_owner = 'tstellar'
-    project_name = 'fedora-41-clang-19'
     copr_client = copr.v3.Client.create_from_config_file()
+   
+    os_name = 'fedora-41'
+    clang_version = '20'
+    target_arches = ['aarch64', 'ppc64le', 's390x', 'x86_64']
+    target_chroots = [f'{os_name}-{a}' for a in target_arches]
+    project_owner = 'tstellar'
+    project_name = f'{os_name}-clang-{clang_version}'
 
     if args.command == 'rebuild':
         exclusions = get_exclusions()
         pkgs = get_pkgs(exclusions)
-        pkgs_to_test = get_monthly_rebuild_packages(project_owner, project_name, copr_client, pkgs)
+        try:
+            copr_client.project_proxy.get(project_owner, project_name)
+            pkgs = get_monthly_rebuild_packages(project_owner, project_name, copr_client, pkgs)
+        except:
+            create_new_project(project_owner, project_name, copr_client, target_chroots)
+        pkgs=['biosdevname']
         snapshot_project = select_snapshot_project(copr_client)
-        start_rebuild(project_owner, project_name, copr_client, pkgs_to_test, snapshot_project)
+        start_rebuild(project_owner, project_name, copr_client, pkgs, snapshot_project)
     elif args.command == 'get-regressions':
         start_time = datetime.datetime.fromisoformat(args.start_date)
         pkg_failures = get_monthly_rebuild_regressions(project_owner, project_name, copr_client, start_time)
