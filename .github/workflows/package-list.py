@@ -44,18 +44,17 @@ def get_pkgs(exclusions: Set[str]) -> Set[set]:
     pkgs = set([p.name for p in list(q)])
     return filter_llvm_pkgs(pkgs) - exclusions
 
-def get_monthly_rebuild_packages(project_owner: str, project_name: str, copr_client : copr.v3.Client, candidate_pkgs : Set[str]) -> Set[str]:
-    pkgs = set()
+def get_monthly_rebuild_packages(project_owner: str, project_name: str, copr_client : copr.v3.Client, pkgs : Set[str]) -> Set[str]:
     for p in copr_client.package_proxy.get_list(project_owner, project_name, with_latest_succeeded_build = True, with_latest_build = True):
         latest_succeeded = p['builds']['latest_succeeded']
         latest = p['builds']['latest']
+        if p['name'] not in pkgs:
+            continue
         if not latest_succeeded:
+            pkgs.discard(p['name'])
             continue
         if latest['id'] != latest_succeeded['id']:
-            continue
-        if p['name'] not in candidate_pkgs:
-            continue
-        pkgs.add(p['name'])
+            pkgs.discard(p['name'])
     return pkgs
 
 def get_monthly_rebuild_regressions(project_owner: str, project_name: str, copr_client : copr.v3.Client, start_time: datetime.datetime) -> Set[str]:
@@ -97,9 +96,8 @@ def start_rebuild(project_owner: str, project_name: str, copr_client: copr.v3.Cl
         return
 
 
-def select_snapshot_project(copr_client: copr.v3.Client) -> str:
+def select_snapshot_project(copr_client: copr.v3.Client, target_chroots: list[str]) -> str:
     project_owner = '@fedora-llvm-team'
-    target_chroots = ['fedora-41-aarch64', 'fedora-41-ppc64le', 'fedora-41-s390x', 'fedora-41-x86_64']
     for i in range(14):
         chroots = set()
         day = datetime.date.today() - datetime.timedelta(days = i)
@@ -144,7 +142,7 @@ def main():
     clang_version = '20'
     target_arches = ['aarch64', 'ppc64le', 's390x', 'x86_64']
     target_chroots = [f'{os_name}-{a}' for a in target_arches]
-    project_owner = 'tstellar'
+    project_owner = '@fedora-llvm-team'
     project_name = f'{os_name}-clang-{clang_version}'
 
     if args.command == 'rebuild':
@@ -155,8 +153,7 @@ def main():
             pkgs = get_monthly_rebuild_packages(project_owner, project_name, copr_client, pkgs)
         except:
             create_new_project(project_owner, project_name, copr_client, target_chroots)
-        pkgs=['biosdevname']
-        snapshot_project = select_snapshot_project(copr_client)
+        snapshot_project = select_snapshot_project(copr_client, target_chroots)
         start_rebuild(project_owner, project_name, copr_client, pkgs, snapshot_project)
     elif args.command == 'get-regressions':
         start_time = datetime.datetime.fromisoformat(args.start_date)
