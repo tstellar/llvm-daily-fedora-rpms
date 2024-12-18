@@ -26,6 +26,6 @@ jobs:
         run: |
           sudo apt-get -y update
           sudo apt-get -y install podman
-          podman build --arch ${{ matrix.arch }} -t ghcr.io/$GITHUB_REPOSITORY_OWNER/llvm-snapshots-reproducer:${{ matrix.arch }} containers/reproducer
+          podman build --arch ${{ matrix.arch }} --build-arg arch=${{ matrix.arch }} -t ghcr.io/$GITHUB_REPOSITORY_OWNER/llvm-snapshots-reproducer:${{ matrix.arch }} containers/reproducer
           podman login -u ${{ github.actor }} -p $GITHUB_TOKEN ghcr.io
           podman push ghcr.io/$GITHUB_REPOSITORY_OWNER/llvm-snapshots-reproducer:${{ matrix.arch }}
