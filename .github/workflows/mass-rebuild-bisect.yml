@@ -10,11 +10,27 @@ on:
         description: "The package to bisect"
         required: true
         type: string
+      arch:
+        description: "The architecture to test"
+        required: false
+        default: x86_64
+        type: choice
+        options:
+          - x86_64
+          - aarch64
+          - ppc64le
+          - s390x
+
   workflow_call:
     inputs:
       pkg:
         description: "The package to bisect"
         required: true
+        type: string
+      arch:
+        description: "The architecture to test"
+        required: false
+        default: x86_64
         type: string
 
 jobs:

@@ -337,6 +337,10 @@ def main():
             project_owner, project_name, start_time, copr_pkgs
         )
         get_chroot_results(pkg_failures, copr_client)
+        # Delete attributes we don't need to print
+        for p in pkg_failures:
+            for k in ["fail_id", "chroots"]:
+                del p[k]
         print(json.dumps(pkg_failures))
 
 
