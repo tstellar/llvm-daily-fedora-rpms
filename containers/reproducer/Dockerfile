@@ -1,4 +1,5 @@
-FROM registry.fedoraproject.org/fedora:41
+ARG arch=x86_64
+FROM registry.fedoraproject.org/fedora:41-${arch}
 
 ENV LLVM_SYSROOT=/opt/llvm \
     AR=llvm-ar \
