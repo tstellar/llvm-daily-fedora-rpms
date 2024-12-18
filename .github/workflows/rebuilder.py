@@ -207,10 +207,21 @@ def get_monthly_rebuild_regressions(
         pkgs.append(
             {
                 "name": p["name"],
+                "fail_id" : latest["id"],
                 "url": f"https://copr.fedorainfracloud.org/coprs/{project_owner}/{project_name}/build/{latest['id']}/",
+                "chroots" : set(latest['chroots'])
             }
         )
     return pkgs
+
+def get_chroot_results(pkgs: list[dict], copr_client: copr.v3.Client) -> None:
+
+    for p in pkgs:
+        p['failed_chroots'] = []
+        for c in p["chroots"]:
+            result = copr_client.build_chroot_proxy.get(p["fail_id"], c)
+            if result['state'] == 'failed':
+                p['failed_chroots'].append(c)
 
 
 def start_rebuild(
@@ -311,13 +322,10 @@ def main():
     if args.command == "rebuild":
         exclusions = get_exclusions()
         pkgs = get_pkgs(exclusions)
-        print(pkgs)
         try:
             copr_client.project_proxy.get(project_owner, project_name)
             copr_pkgs = get_builds_from_copr(project_owner, project_name, copr_client)
-            print(copr_pkgs)
             pkgs = get_monthly_rebuild_packages(pkgs, copr_pkgs)
-            print(pkgs)
         except:
             create_new_project(project_owner, project_name, copr_client, target_chroots)
         snapshot_project = select_snapshot_project(copr_client, target_chroots)
@@ -328,6 +336,7 @@ def main():
         pkg_failures = get_monthly_rebuild_regressions(
             project_owner, project_name, start_time, copr_pkgs
         )
+        get_chroot_results(pkg_failures, copr_client)
         print(json.dumps(pkg_failures))
 
 
