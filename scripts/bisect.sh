@@ -46,6 +46,13 @@ if ! ./git-bisect-script.sh $srpm_name; then
   exit 1
 fi
 
+git checkout $bad_commit
+# Test the bad commit to see if this a false positive
+if ./git-bisect-script.sh $srpm_name; then
+  echo "False Positive."
+  exit 1
+fi
+
 git bisect start
 git bisect good $good_commit
 git bisect bad $bad_commit
