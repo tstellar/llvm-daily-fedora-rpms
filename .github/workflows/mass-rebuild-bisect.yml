@@ -36,6 +36,6 @@ jobs:
       - if: always()
         working-directory: /root/llvm-project
         run: |
-          if ! git bisect log; then
-            # False positive.
+          if !git bisect log; then
+            echo "Write FALSE Positive to issue"
           fi
