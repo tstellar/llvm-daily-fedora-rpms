@@ -61,11 +61,11 @@ jobs:
 
           echo "last_rebuild: $last_rebuild current_snapshot: $current_snapshot"
 
-          if [ $last_rebuild -gt $current_snapshot ]; then
+          #if [ $last_rebuild -gt $current_snapshot ]; then
           #        echo "completed=false" >> $GITHUB_OUTPUT
-          else
+          #else
           #echo "completed=true" >> $GITHUB_OUTPUT
-          fi
+          # fi
             echo "completed=true" >> $GITHUB_OUTPUT
 
       - name: Collect Regressions
