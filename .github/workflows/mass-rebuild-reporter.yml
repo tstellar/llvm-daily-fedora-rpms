@@ -114,7 +114,6 @@ jobs:
             core.setOutput("bisect-list", JSON.stringify(bisect_list))
 
   bisect-failures:
-    if: github.repository_owner == 'fedora-llvm-team'
     needs:
       - check-for-rebuild
     strategy:
