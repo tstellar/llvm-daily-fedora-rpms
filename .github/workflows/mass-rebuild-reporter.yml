@@ -85,11 +85,21 @@ jobs:
             const regressions = await JSON.parse(fs.readFileSync('./regressions'));
             comment = "During the last mass rebuild, some packages failed:\n";
             console.log(regressions);
+            bisect_list = [];
             if (regressions.length == 0)
               return;
             regressions.forEach(function(value){
-              comment = `- [ ] [${value.name}]($value.url}) `
+              comment = `- [ ] [${value.name}]($value.url}) ${value.failed_chroots}`
+              value.failed_chroots.some(function(chroot){
+                if (chroot.endsWith('x86_64')) {
+                  bisect_list.push(value.name)
+                  return true;
+                } else {
+                  return false;
+                }
+              });
             });
+
             console.log(comment);
             const issue = await github.rest.issues.create({
                owner: context.repo.owner,
@@ -99,6 +109,8 @@ jobs:
                body: comment
             });
             console.log(issue);
+            console.log(bisect_list);
+            core.setOutput("bisect-list", JSON.stringify(bisect_list))
 
   bisect-failures:
     if: github.repository_owner == 'fedora-llvm-team'
@@ -108,7 +120,7 @@ jobs:
       max-parallel: 1
       fail-fast: false
       matrix:
-        include: ${{ fromJson(needs.check-for-rebuild.outputs.regressions) }}
+        name: ${{ fromJson(needs.check-for-rebuild.outputs.bisect-list) }}
     uses: ./.github/workflows/mass-rebuild-bisect.yml
     with:
       pkg: ${{ matrix.name }}
