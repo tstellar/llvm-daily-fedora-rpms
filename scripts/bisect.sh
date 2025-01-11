@@ -36,6 +36,12 @@ srpm_name=$(basename $srpm_url)
 
 dnf builddep -y $srpm_name
 
+# Test the good commit to see if this a false positive
+git checkout $good_commit
+if ! ./git-bisect-script.sh $srpm_name; then
+  echo "False Positive."
+  exit 1
+fi
 
 git bisect start
 git bisect good $good_commit

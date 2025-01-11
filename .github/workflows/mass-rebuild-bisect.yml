@@ -37,4 +37,6 @@ jobs:
       - if: always()
         working-directory: /root/llvm-project
         run: |
-          git bisect log
+          if ! git bisect log; then
+            # False positive.
+          fi
