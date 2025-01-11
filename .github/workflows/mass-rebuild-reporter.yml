@@ -11,7 +11,6 @@ permissions:
 
 jobs:
   check-for-rebuild:
-    if: github.repository_owner == 'fedora-llvm-team'
     runs-on: ubuntu-24.04
     permissions:
       issues: write
@@ -63,10 +62,11 @@ jobs:
           echo "last_rebuild: $last_rebuild current_snapshot: $current_snapshot"
 
           if [ $last_rebuild -gt $current_snapshot ]; then
-            echo "completed=false" >> $GITHUB_OUTPUT
+          #        echo "completed=false" >> $GITHUB_OUTPUT
           else
-            echo "completed=true" >> $GITHUB_OUTPUT
+          #echo "completed=true" >> $GITHUB_OUTPUT
           fi
+            echo "completed=true" >> $GITHUB_OUTPUT
 
       - name: Collect Regressions
         if: steps.new-rebuild.outputs.completed == 'true'
