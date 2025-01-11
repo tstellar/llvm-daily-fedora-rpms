@@ -112,6 +112,7 @@ jobs:
             core.setOutput("issue-id", issue.data.number)
 
   bisect-failures:
+    if: github.repository_owner == 'fedora-llvm-team'
     needs:
       - check-for-rebuild
     permissions:
