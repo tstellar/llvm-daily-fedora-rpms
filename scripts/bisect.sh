@@ -38,6 +38,9 @@ dnf builddep -y $srpm_name
 
 # Test the good commit to see if this a false positive
 git checkout $good_commit
+
+cmake -G Ninja -B build -S llvm -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_PROJECTS=clang -DLLVM_TARGETS_TO_BUILD=Native -DLLVM_BINUTILS_INCDIR=/usr/include/ -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER=/opt/llvm/bin/clang++ -DCMAKE_C_COMPILER=/opt/llvm/bin/clang
+
 if ! ./git-bisect-script.sh $srpm_name; then
   echo "False Positive."
   exit 1
@@ -46,7 +49,5 @@ fi
 git bisect start
 git bisect good $good_commit
 git bisect bad $bad_commit
-
-cmake -G Ninja -B build -S llvm -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_PROJECTS=clang -DLLVM_TARGETS_TO_BUILD=Native -DLLVM_BINUTILS_INCDIR=/usr/include/ -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER=/opt/llvm/bin/clang++ -DCMAKE_C_COMPILER=/opt/llvm/bin/clang
 
 git bisect run ./git-bisect-script.sh $srpm_name
