@@ -29,7 +29,6 @@ on:
 
 jobs:
   mass-rebuild-bisect:
-    if: github.repository_owner == 'fedora-llvm-team'
     runs-on: ubuntu-24.04
     permissions:
       issues: write
