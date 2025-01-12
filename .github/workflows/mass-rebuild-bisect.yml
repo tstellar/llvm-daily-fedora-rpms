@@ -48,10 +48,10 @@ jobs:
         working-directory: /root/llvm-project
         id: result
         run: |
-          git bisect log > bisect.log
-          if [ $? -ne 0 ]; then
+          if ! git bisect log; then
             echo "result=False Positive" >> $GITHUB_OUTPUT
           else
+            git bisect log > bisect.log
             echo "result=Bisect Complete" >> $GITHUB_OUTPUT
           fi
 
