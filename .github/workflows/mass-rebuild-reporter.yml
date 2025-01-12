@@ -91,11 +91,15 @@ jobs:
             if (regressions.length == 0)
               return;
             regressions.forEach(function(value){
+<<<<<<< HEAD
               arches = value.failed_chroots.map((value) => value.split('-')[2]);
-              comment = comment + `- [ ] [${value.name}](${value.url}) (${arches})\n`
+              comment = comment + `- [ ] [${value.name}](${value.url.replace('@','g/')}) (${arches})\n`
               if (arches.includes('x86_64')) {
                 bisect_list.push(value.name)
               }
+=======
+              comment = comment + `- [ ] [${value.name}](${value.url.replace('@','g/'})\n`
+>>>>>>> 7b6e147 (Fix url)
             });
 
             console.log(comment);
