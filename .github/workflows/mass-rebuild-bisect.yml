@@ -49,6 +49,7 @@ jobs:
         id: result
         run: |
           if ! git bisect log; then
+            touch bisect.log
             echo "result=False Positive" >> $GITHUB_OUTPUT
           else
             git bisect log > bisect.log
