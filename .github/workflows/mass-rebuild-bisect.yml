@@ -70,12 +70,11 @@ jobs:
             var fs = require('fs');
             const bisect_log = await fs.readFileSync('/root/llvm-project/bisect.log');
             const result_string = "${{ steps.result.outputs.result }}";
-            const package = core.getInput('pkg');
-            console.log("Issue ID: " + core.getInput('issue'));
+            const package = '${{ inputs.pkg }}'
             github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: core.getInput('issue'),
+              issue_number: '${{ inputs.issue }}'
               body: "[Bisect](${jobs.data.jobs[0].html_url}) complete for ${package}\n\n${result_string}\n\n{bisect_log}"
             })
 
