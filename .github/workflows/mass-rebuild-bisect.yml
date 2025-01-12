@@ -64,7 +64,7 @@ jobs:
               repo: context.repo.repo,
               run_id: process.env.GITHUB_RUN_ID
             });
-            print(workflowRun)
+            console.log(workflowRun)
             const bisect_log = await fs.readFileSync('./bisect.log');
             const result_string = "${{ steps.result.outputs.result }}";
             octokit.rest.issues.createComment({
