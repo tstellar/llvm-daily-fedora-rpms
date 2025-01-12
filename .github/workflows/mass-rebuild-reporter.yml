@@ -118,6 +118,8 @@ jobs:
     if: github.repository_owner == 'fedora-llvm-team'
     needs:
       - check-for-rebuild
+    permissions:
+      issues: write
     strategy:
       max-parallel: 1
       fail-fast: false
