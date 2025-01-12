@@ -91,14 +91,10 @@ jobs:
             if (regressions.length == 0)
               return;
             regressions.forEach(function(value){
-              comment = comment + `- [ ] [${value.name}](${value.url}) ${value.failed_chroots}\n`
-              value.failed_chroots.some(function(chroot){
-                if (chroot.endsWith('x86_64')) {
-                  bisect_list.push(value.name)
-                  return true;
-                } else {
-                  return false;
-                }
+              arches = value.failed_chroots.map((value) => value.split('-')[2]);
+              comment = comment + `- [ ] [${value.name}](${value.url}) (${arches})\n`
+              if (arches.includes('x86_64')) {
+                bisect_list.push(value.name)
               });
             });
 
