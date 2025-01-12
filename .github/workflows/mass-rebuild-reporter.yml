@@ -19,6 +19,7 @@ jobs:
       image: "registry.fedoraproject.org/fedora:41"
     outputs:
       bisect-list: ${{ steps.report.outputs.bisect-list }}
+      issue-id: ${{ steps.report.outputs.issue-id }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -112,6 +113,7 @@ jobs:
             console.log(issue);
             console.log(bisect_list);
             core.setOutput("bisect-list", JSON.stringify(bisect_list))
+            core.setOutput("issue-id", issue.id)
 
   bisect-failures:
     if: github.repository_owner == 'fedora-llvm-team'
@@ -125,3 +127,4 @@ jobs:
     uses: ./.github/workflows/mass-rebuild-bisect.yml
     with:
       pkg: ${{ matrix.name }}
+      issue: ${{ needs.check-for-rebuild.outputs.issue-id }}
