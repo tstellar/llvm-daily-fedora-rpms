@@ -95,7 +95,7 @@ jobs:
               comment = comment + `- [ ] [${value.name}](${value.url}) (${arches})\n`
               if (arches.includes('x86_64')) {
                 bisect_list.push(value.name)
-              });
+              }
             });
 
             console.log(comment);
