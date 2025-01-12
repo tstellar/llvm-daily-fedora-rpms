@@ -110,7 +110,7 @@ jobs:
                labels: ['mass-rebuild'],
                body: comment
             });
-            console.log(issue);
+            console.log(issue.data.number);
             console.log(bisect_list);
             core.setOutput("bisect-list", JSON.stringify(bisect_list))
             core.setOutput("issue-id", issue.id)
