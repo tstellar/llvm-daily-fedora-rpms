@@ -110,10 +110,9 @@ jobs:
                labels: ['mass-rebuild'],
                body: comment
             });
-            console.log(issue.data.number);
             console.log(bisect_list);
             core.setOutput("bisect-list", JSON.stringify(bisect_list))
-            core.setOutput("issue-id", issue.id)
+            core.setOutput("issue-id", issue.data.number)
 
   bisect-failures:
     if: github.repository_owner == 'fedora-llvm-team'
