@@ -59,18 +59,20 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const workflowRun = await github.rest.actions.getWorkflowRun({
+            const jobs = await github.rest.actions.listJobsForWorkflowRunAttempt({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              run_id: process.env.GITHUB_RUN_ID
+              run_id: context.runId,
+              attempt_number: process.env.GITHUB_RUN_ATTEMPT
             });
-            console.log(workflowRun)
+            var fs = require('fs');
             const bisect_log = await fs.readFileSync('./bisect.log');
             const result_string = "${{ steps.result.outputs.result }}";
+            const package = core.gitInput('pkg');
             octokit.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: core.getInput(issue),
-              body: "${result_string}\n\n${workflow_run}\n\n${bisect_log}"
+              issue_number: core.getInput('issue'),
+              body: "[Bisect](${jobs.data.jobs[0].html_url}) complete for ${package}\n\n${result_string}\n\n{bisect_log}"
             })
 
