@@ -77,6 +77,6 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: '${{ inputs.issue }}',
-              body: "[Bisect](${jobs.data.jobs[0].html_url}) complete for ${package}\n\n${result_string}\n\n{bisect_log}"
+              body: `[Bisect](${jobs.data.jobs[0].html_url}) complete for ${package}\n\n${result_string}\n\n{bisect_log}`
             })
 
