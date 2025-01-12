@@ -119,6 +119,7 @@ jobs:
     needs:
       - check-for-rebuild
     permissions:
+      contents: read
       issues: write
     strategy:
       max-parallel: 1
