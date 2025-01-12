@@ -13,7 +13,7 @@ on:
       issue:
         description: "The id of the issue to update with the bisect results."
         required: false
-        type: number
+        type: string
         default: 0
   workflow_call:
     inputs:
@@ -24,7 +24,7 @@ on:
       issue:
         description: "The id of the issue to update with the bisect results."
         required: false
-        type: number
+        type: string
         default: 0
 
 jobs:
