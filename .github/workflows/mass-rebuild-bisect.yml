@@ -71,7 +71,7 @@ jobs:
             const bisect_log = await fs.readFileSync('/root/llvm-project/bisect.log');
             const result_string = "${{ steps.result.outputs.result }}";
             const package = core.getInput('pkg');
-            system.log("Issue ID: " + core.getInput('issue'));
+            console.log("Issue ID: " + core.getInput('issue'));
             github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
