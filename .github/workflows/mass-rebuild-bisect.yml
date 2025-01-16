@@ -82,7 +82,7 @@ jobs:
 
             if (result_string == "False Positive") {
               issue = await github.rest.issues.get({
-                onwer: context.repo.owner,
+                owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: '${{ inputs.issue }}'
               })
