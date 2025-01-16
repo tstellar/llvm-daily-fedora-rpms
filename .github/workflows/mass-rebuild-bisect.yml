@@ -81,14 +81,14 @@ jobs:
             })
 
             if (result_string == "False Positive") {
-              issue = github.rest.issues.get({
+              issue = await github.rest.issues.get({
                 onwer: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: '${{ inputs.issue }}'
               })
 
               console.log(issue);
-              var body = await issue.data.body.replace(`- [ ] [${package}]`,`- [x] [${package}]`)
+              var body = issue.data.body.replace(`- [ ] [${package}]`,`- [x] [${package}]`)
 
               github.rest.issues.update({
                 onwer: context.repo.owner,
