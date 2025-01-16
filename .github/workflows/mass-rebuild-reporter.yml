@@ -128,6 +128,7 @@ jobs:
       issue: ${{ needs.check-for-rebuild.outputs.issue-id }}
 
   notify-bisect-complete:
+    if: always()
     needs:
       - check-for-rebuild
       - bisect-failures
