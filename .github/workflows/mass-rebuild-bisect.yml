@@ -93,7 +93,7 @@ jobs:
               github.rest.issues.update({
                 onwer: context.repo.owner,
                 repo: context.repo.repo,
-                issue_number: '${{ inputs.issue }}'
+                issue_number: '${{ inputs.issue }}',
                 body: body
               })
             }
