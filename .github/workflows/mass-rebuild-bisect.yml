@@ -87,7 +87,7 @@ jobs:
                 issue_number: '${{ inputs.issue }}'
               })
 
-              console.log(issue)
+              console.log(issue);
               body = issue.data.body.replace(`- [ ] [${package}]`,`- [x] [${package}]`)
 
               github.rest.issues.update({
