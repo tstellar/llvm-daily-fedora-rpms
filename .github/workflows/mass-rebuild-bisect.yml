@@ -91,7 +91,7 @@ jobs:
               var body = issue.data.body.replace(`- [ ] [${package}]`,`- [x] [${package}]`)
 
               github.rest.issues.update({
-                onwer: context.repo.owner,
+                owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: '${{ inputs.issue }}',
                 body: body
