@@ -129,6 +129,7 @@ jobs:
 
   notify-bisect-complete:
     if: always()
+    runs-on: ubuntu-24.04
     needs:
       - check-for-rebuild
       - bisect-failures
