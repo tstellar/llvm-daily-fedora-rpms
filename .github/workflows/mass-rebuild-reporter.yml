@@ -64,7 +64,7 @@ jobs:
         if: steps.new-rebuild.outputs.completed == 'true'
         id: regressions
         run: |
-          python3 scripts/rebuilder.py get-regressions --start-date 2025-02-28 > regressions
+          python3 scripts/rebuilder.py get-regressions --start-date 2025-01-22 > regressions
           echo "REGRESSIONS=$(cat regressions)" >> "$GITHUB_OUTPUT"
 
       - name: Create Report
