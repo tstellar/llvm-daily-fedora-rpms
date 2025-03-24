@@ -50,10 +50,10 @@ jobs:
       - name: "Setup"
         id: vars
         run: |
-          runs_on="$RUNNER_NAME"
+          runs_on="ubuntu-24.04"
           case "${{ inputs.arch }}" in
             aarch64)
-              runs_on="$RUNNER_NAME-arm"
+              runs_on="$runs_on-arm"
               emulated="false"
               ;;
             ppc64le|s390x)
@@ -75,7 +75,7 @@ jobs:
     outputs:
       result: ${{ steps.result.outputs.result }}
     container:
-      image: "ghcr.io/${{ github.repository_owner }}/llvm-snapshots-reproducer"
+      image: "ghcr.io/${{ github.repository_owner }}/llvm-snapshots-reproducer:${{ inputs.arch }}"
     steps:
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
@@ -83,10 +83,25 @@ jobs:
           max-size: 8G
           key: bisect
       - working-directory: /root/llvm-project/
-        if: false
+        if: needs.mass-rebuild-bisect-steup.outputs.emulated == 'false' && false
         run: |
           git fetch origin
           bash bisect.sh ${{ inputs.pkg }}
+
+      - if: needs.mass-rebuild-bisect-setup.outputs.emulated == 'true'
+        run: |
+          mkdir -p container-output
+          podman run -v $GITHUB_WORKSPACE/container-output:/root/llvm-project/container-output \
+            ghcr.io/${{ github.repository_owner }}/llvm-snapshots-reproducer:${{ intputs.arch }}" \
+            'git fetch origin && bash bisect.sh ${{ inputs.pkg }} && (git bisect log > container-output/bisect.log || true)
+
+          if [ -e container-output/bisect.log ]; then
+            echo "result=Bisect Complete" >> "$GITHUB_OUTPUT"
+          else
+            echo "result=False Positive" >> "$GITHUB_OUTPUT"
+            touch container-output/bisect.log
+          fi
+          mv container-output/bisect.log .
 
       - if: always()
         working-directory: /root/llvm-project
@@ -100,6 +115,14 @@ jobs:
             git bisect log > bisect.log
             echo "result=Bisect Complete" >> "$GITHUB_OUTPUT"
           fi
+      
+      - name: Upload bisect.log
+        if: always()
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+        with:
+          name: bisect-${{ input.pkg }}-${{ input.arch }}
+          path: bisect.log
+          retention-days: 14
 
   mass-rebuild-bisect-report:
     if: >-
@@ -111,6 +134,8 @@ jobs:
     permissions:
       issues: write
     steps:
+      - name: Download bisect.log
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
       - uses: actions/github-script@v7
         with:
           script: |
