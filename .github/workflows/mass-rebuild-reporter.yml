@@ -110,7 +110,6 @@ jobs:
       contents: read
       issues: write
     strategy:
-      max-parallel: 1
       fail-fast: false
       matrix:
         include: ${{ fromJson(needs.check-for-rebuild.outputs.bisect-list) }}
