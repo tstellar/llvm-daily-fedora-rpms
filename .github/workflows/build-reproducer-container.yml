@@ -3,14 +3,13 @@ name: "Build Reproducer Container"
 on:
   push:
     branches:
-      - main
+      - multiarch-emulate
 
 permissions:
   contents: read
 
 jobs:
   build-reproducer-container:
-    if: github.repository_owner == 'fedora-llvm-team'
     runs-on: ubuntu-24.04
     strategy:
       matrix:

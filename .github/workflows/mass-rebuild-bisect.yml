@@ -83,7 +83,7 @@ jobs:
           max-size: 8G
           key: bisect
       - working-directory: /root/llvm-project/
-        if: needs.mass-rebuild-bisect-steup.outputs.emulated == 'false' && false
+        if: needs.mass-rebuild-bisect-steup.outputs.emulated == 'false'
         run: |
           git fetch origin
           bash bisect.sh ${{ inputs.pkg }}
@@ -122,7 +122,6 @@ jobs:
 
   mass-rebuild-bisect-report:
     if: >-
-      github.repository_owner == 'fedora-llvm-team' &&
       always() &&
       inputs.issue != 0
     runs-on: ubuntu-24.04
