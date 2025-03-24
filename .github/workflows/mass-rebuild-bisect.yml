@@ -74,7 +74,7 @@ jobs:
     outputs:
       result: ${{ steps.result.outputs.result }}
     container:
-      image: "ghcr.io/${{ github.repository_owner }}/llvm-snapshots-reproducer:${{ inputs.arch }}"
+      image: ${{ (needs.mass-rebuild-bisect-setup.outputs.emulated == 'false' && "ghcr.io/${{ github.repository_owner }}/llvm-snapshots-reproducer:${{ inputs.arch }}") || null}}
     steps:
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
