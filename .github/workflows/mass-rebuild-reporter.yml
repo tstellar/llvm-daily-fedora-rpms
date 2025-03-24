@@ -86,7 +86,7 @@ jobs:
             regressions.failed_chroots.forEach(function(value){
               arch = value.split('-')[2];
               comment = comment + `- [ ] [${value.name}](${value.url.replace('@','g/')}) (${arch})\n`;
-              bisect_list.push({"name" : value.name : "arch" : arch});
+              bisect_list.push({"name" : value.name, "arch" : arch});
             });
 
             console.log(comment);
