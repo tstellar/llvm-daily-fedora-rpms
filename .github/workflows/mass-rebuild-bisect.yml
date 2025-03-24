@@ -91,8 +91,8 @@ jobs:
         run: |
           mkdir -p container-output
           podman run -v $GITHUB_WORKSPACE/container-output:/root/llvm-project/container-output \
-            ghcr.io/${{ github.repository_owner }}/llvm-snapshots-reproducer:${{ inputs.arch }}" \
-            'git fetch origin && bash bisect.sh ${{ inputs.pkg }} && (git bisect log > container-output/bisect.log || true)
+            "ghcr.io/${{ github.repository_owner }}/llvm-snapshots-reproducer:${{ inputs.arch }}" \
+            'git fetch origin && bash bisect.sh ${{ inputs.pkg }} && (git bisect log > container-output/bisect.log || true)'
 
           if [ -e container-output/bisect.log ]; then
             echo "result=Bisect Complete" >> "$GITHUB_OUTPUT"
