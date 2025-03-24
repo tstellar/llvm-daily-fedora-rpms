@@ -54,6 +54,7 @@ jobs:
           max-size: 8G
           key: bisect
       - working-directory: /root/llvm-project/
+        if: false
         run: |
           git fetch origin
           bash bisect.sh ${{ inputs.pkg }}
