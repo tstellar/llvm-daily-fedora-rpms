@@ -83,10 +83,12 @@ jobs:
             if (regressions.length == 0)
               return;
 
-            regressions.failed_chroots.forEach(function(value){
-              arch = value.split('-')[2];
-              comment = comment + `- [ ] [${value.name}](${value.url.replace('@','g/')}) (${arch})\n`;
-              bisect_list.push({"name" : value.name, "arch" : arch});
+            regressions.foreach(function(regression){
+              regression.failed_chroots.forEach(function(chroot){
+                arch = chroot.split('-')[2];
+                comment = comment + `- [ ] [${regression.name}](${regression.url.replace('@','g/')}) (${arch})\n`;
+                bisect_list.push({"name" : regression.name, "arch" : arch});
+              })
             });
 
             console.log(comment);
