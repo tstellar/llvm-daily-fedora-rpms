@@ -43,6 +43,8 @@ on:
 jobs:
   mass-rebuild-bisect:
     runs-on: ubuntu-24.04
+    outputs:
+      result: ${{ steps.result.outputs.result }}
     container:
       image: "ghcr.io/${{ github.repository_owner }}/llvm-snapshots-reproducer"
     steps:
@@ -74,6 +76,8 @@ jobs:
       always() &&
       inputs.issue != 0
     runs-on: ubuntu-24.04
+    needs:
+      - mass-rebuild-bisect
     permissions:
       issues: write
     steps:
@@ -88,7 +92,7 @@ jobs:
             });
             var fs = require('fs');
             const bisect_log = await fs.readFileSync('/root/llvm-project/bisect.log');
-            const result_string = "${{ steps.result.outputs.result }}";
+            const result_string = "${{ needs.mass-rebuild-bisect.outputs.result }}";
             const package = '${{ inputs.pkg }}'
             github.rest.issues.createComment({
               owner: context.repo.owner,
