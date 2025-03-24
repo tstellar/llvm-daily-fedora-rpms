@@ -111,7 +111,7 @@ jobs:
       max-parallel: 1
       fail-fast: false
       matrix:
-        - include: ${{ fromJson(needs.check-for-rebuild.outputs.bisect-list) }}
+        include: ${{ fromJson(needs.check-for-rebuild.outputs.bisect-list) }}
     uses: ./.github/workflows/mass-rebuild-bisect.yml
     with:
       pkg: ${{ matrix.name }}
