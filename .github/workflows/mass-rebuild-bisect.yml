@@ -71,7 +71,7 @@ jobs:
 
   mass-rebuild-bisect-report:
     if: >-
-      always() && \
+      always() &&
       inputs.issue != 0
     runs-on: ubuntu-24.04
     permissions:
