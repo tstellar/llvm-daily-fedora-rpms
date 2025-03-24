@@ -1,9 +1,6 @@
 name: "Mass Rebuild Reporter"
 
 on:
-  schedule:
-    # Hourly at minute 40, e.g. 2024-12-18 00:40:00
-    - cron: "40 * * * *"
   workflow_dispatch:
 
 permissions:
@@ -11,7 +8,6 @@ permissions:
 
 jobs:
   check-for-rebuild:
-    if: github.repository_owner == 'fedora-llvm-team'
     runs-on: ubuntu-24.04
     permissions:
       issues: write
@@ -110,7 +106,6 @@ jobs:
             core.setOutput("issue-id", issue.data.number)
 
   bisect-failures:
-    if: github.repository_owner == 'fedora-llvm-team'
     needs:
       - check-for-rebuild
     permissions:
@@ -128,7 +123,7 @@ jobs:
       issue: ${{ needs.check-for-rebuild.outputs.issue-id }}
 
   notify-bisect-complete:
-    if: always() && github.repository_owner == 'fedora-llvm-team'
+    if: always()
     runs-on: ubuntu-24.04
     needs:
       - check-for-rebuild
