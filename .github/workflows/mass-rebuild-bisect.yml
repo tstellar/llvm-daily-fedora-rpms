@@ -41,8 +41,37 @@ on:
         default: x86_64
 
 jobs:
-  mass-rebuild-bisect:
+  mass-rebuild-bisect-setup:
     runs-on: ubuntu-24.04
+    outputs:
+      runs-on: ${{ steps.vars.outputs.runs-on }}
+      emulated: ${{ steps.vars.outputs.emulated }}
+    steps:
+      - name: "Setup"
+        id: vars
+        run: |
+          runs_on="$RUNNER_NAME"
+          case "${{ inputs.arch }} in
+            aarch64)
+              runs_on="$RUNNER_NAME-arm"
+              emulated="false"
+              ;;
+            ppc64le|s390x)
+              emulated="true"
+              ;;
+            x86_64)
+              emulated="false"
+              ;;
+          esac
+          echo "runs-on=$runs_on" >> $GITHUB_OUTPUT
+          echo "emulated=$emulated" >> $GITHUB_OUTPUT
+
+
+  mass-rebuild-bisect:
+    runs-on: ${{ needs.mass-rebuild-bisect-setup.outputs.runs-on }}
+    if: ${{ needs.mass-rebuild-bisect.setup.emulated == 'false' }}
+    needs:
+      - mass-rebuild-bisect-setup
     outputs:
       result: ${{ steps.result.outputs.result }}
     container:
