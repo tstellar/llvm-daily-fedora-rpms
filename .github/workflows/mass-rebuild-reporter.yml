@@ -83,7 +83,7 @@ jobs:
             if (regressions.length == 0)
               return;
 
-            regressions.foreach(function(regression){
+            regressions.forEach(function(regression){
               regression.failed_chroots.forEach(function(chroot){
                 arch = chroot.split('-')[2];
                 comment = comment + `- [ ] [${regression.name}](${regression.url.replace('@','g/')}) (${arch})\n`;
