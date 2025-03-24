@@ -51,7 +51,7 @@ jobs:
         id: vars
         run: |
           runs_on="$RUNNER_NAME"
-          case "${{ inputs.arch }} in
+          case "${{ inputs.arch }}" in
             aarch64)
               runs_on="$RUNNER_NAME-arm"
               emulated="false"
