@@ -58,11 +58,7 @@ jobs:
 
           echo "last_rebuild: $last_rebuild current_snapshot: $current_snapshot"
 
-          if [ "$last_rebuild" -gt "$current_snapshot" ]; then
-            echo "completed=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "completed=true" >> "$GITHUB_OUTPUT"
-          fi
+          echo "completed=true" >> "$GITHUB_OUTPUT"
 
       - name: Collect Regressions
         if: steps.new-rebuild.outputs.completed == 'true'
