@@ -69,7 +69,6 @@ jobs:
 
   mass-rebuild-bisect:
     runs-on: ${{ needs.mass-rebuild-bisect-setup.outputs.runs-on }}
-    if: needs.mass-rebuild-bisect-setup.outputs.emulated == 'false'
     needs:
       - mass-rebuild-bisect-setup
     outputs:
