@@ -90,12 +90,11 @@ jobs:
             bisect_list = [];
             if (regressions.length == 0)
               return;
-            regressions.forEach(function(value){
-              arches = value.failed_chroots.map((value) => value.split('-')[2]);
-              comment = comment + `- [ ] [${value.name}](${value.url.replace('@','g/')}) (${arches})\n`
-              if (arches.includes('x86_64')) {
-                bisect_list.push(value.name)
-              }
+
+            regressions.failed_chroots.forEach(function(value){
+              arch = value.split('-')[2];
+              comment = comment + `- [ ] [${value.name}](${value.url.replace('@','g/')}) (${arch})\n`;
+              bisect_list.push({"name" : value.name : "arch" : arch});
             });
 
             console.log(comment);
@@ -121,10 +120,11 @@ jobs:
       max-parallel: 1
       fail-fast: false
       matrix:
-        name: ${{ fromJson(needs.check-for-rebuild.outputs.bisect-list) }}
+        - include: ${{ fromJson(needs.check-for-rebuild.outputs.bisect-list) }}
     uses: ./.github/workflows/mass-rebuild-bisect.yml
     with:
       pkg: ${{ matrix.name }}
+      arch: ${{ matrix.arch }}
       issue: ${{ needs.check-for-rebuild.outputs.issue-id }}
 
   notify-bisect-complete:

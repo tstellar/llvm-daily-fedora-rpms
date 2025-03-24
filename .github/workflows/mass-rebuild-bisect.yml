@@ -15,6 +15,15 @@ on:
         required: false
         type: string
         default: 0
+      arch:
+        description: "The architecture to test"
+        type: choice
+        default: x86_64
+        options:
+          - x86_64
+          - aarch64
+          - ppc64le
+          - s390x
   workflow_call:
     inputs:
       pkg:
@@ -26,13 +35,15 @@ on:
         required: false
         type: string
         default: 0
+      arch:
+        description: "The architecture to test"
+        type: string
+        default: x86_64
 
 jobs:
   mass-rebuild-bisect:
     if: github.repository_owner == 'fedora-llvm-team'
     runs-on: ubuntu-24.04
-    permissions:
-      issues: write
     container:
       image: "ghcr.io/${{ github.repository_owner }}/llvm-snapshots-reproducer"
     steps:
@@ -59,8 +70,16 @@ jobs:
             echo "result=Bisect Complete" >> "$GITHUB_OUTPUT"
           fi
 
-      - if: always() && inputs.issue != 0
-        uses: actions/github-script@v7
+  mass-rebuild-bisect-report:
+    if: >-
+      github.repository_owner == 'fedora-llvm-team' && \
+      always() && \
+      inputs.issue != 0
+    runs-on: ubuntu-24.04
+    permissions:
+      issues: write
+    steps:
+      - uses: actions/github-script@v7
         with:
           script: |
             const jobs = await github.rest.actions.listJobsForWorkflowRunAttempt({
