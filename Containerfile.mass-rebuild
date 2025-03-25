@@ -1,8 +1,10 @@
-ARG optimized_llvm=registry.fedoraproject.org/fedora:41
 ARG arch=x86_64
+ARG base_image=registry.fedoraproject.org/fedora:41-${arch}
+ARG optimized_llvm=${base_image}
 FROM ${optimized_llvm} as optimized-llvm
-FROM registry.fedoraproject.org/fedora:41-${arch}
-ARG llvm_sysroot=/dev/null
+FROM ${base_image}
+# Hack to copy nothing from the optimized-llvm image.
+ARG llvm_sysroot=/tmp
 
 ENV LLVM_SYSROOT=${llvm_sysroot} \
     AR=llvm-ar \
