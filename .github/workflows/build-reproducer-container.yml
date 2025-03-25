@@ -3,7 +3,7 @@ name: "Build Reproducer Container"
 on:
   push:
     branches:
-      - main
+      - multiarch-emulate
 
 permissions:
   contents: read
