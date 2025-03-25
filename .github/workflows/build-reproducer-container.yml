@@ -11,8 +11,6 @@ permissions:
 jobs:
   build-reproducer-container:
     runs-on: ubuntu-24.04
-    container:
-      image: fedora:41
     strategy:
       matrix:
         arch:
@@ -28,7 +26,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
-          dnf install -y podman qemu-user-static
+          sudo apt-get -y update
+          sudo apt-get -y install podman
           podman build  --build-arg arch=${{ matrix.arch }} --arch ${{ matrix.arch }} -t "ghcr.io/$GITHUB_REPOSITORY_OWNER/llvm-snapshots-reproducer:${{ matrix.arch }}" -f Containerfile.mass-rebuild scripts/
           podman login -u ${{ github.actor }} -p "$GITHUB_TOKEN" ghcr.io
           podman push "ghcr.io/$GITHUB_REPOSITORY_OWNER/llvm-snapshots-reproducer:${{ matrix.arch }}"
