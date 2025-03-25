@@ -89,7 +89,8 @@ jobs:
 
       - if: needs.mass-rebuild-bisect-setup.outputs.emulated == 'true'
         run: |
-          dnf install -y qemu-user-static
+          apt-get update
+          apt-get install -y qemu-user-static
           mkdir -p container-output
           podman run --arch ${{ inputs.arch }} -v $GITHUB_WORKSPACE/container-output:/root/llvm-project/container-output \
             "ghcr.io/${{ github.repository_owner }}/llvm-snapshots-reproducer:${{ inputs.arch }}" \
