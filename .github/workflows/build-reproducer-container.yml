@@ -26,8 +26,21 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
+          case "${{ matrix.arch }}" in
+            aarch64)
+              llvm_container_arch="arm64v8"
+              ;;
+            x86_64)
+              llvm_container_arch="amd64"
+              ;;
+          esac
+
+          if [ -n "$llvm_container_arch ]; then
+            extra_args="--optimized_llvm=ghcr.io/llvm/$llvm_container_arch/ci-ubuntu-22.04:9f919661dd2f --llvm_sysroot=/opt/llvm/"
+          fi
+
           sudo apt-get -y update
           sudo apt-get -y install podman qemu-user-static
-          podman build  --arch ${{  matrix.arch }} --build-arg arch=${{ matrix.arch }} -t "ghcr.io/$GITHUB_REPOSITORY_OWNER/llvm-snapshots-reproducer:${{ matrix.arch }}" -f Containerfile.mass-rebuild scripts/
+          podman build  --arch ${{  matrix.arch }} --build-arg arch=${{ matrix.arch }} $extra_args -t "ghcr.io/$GITHUB_REPOSITORY_OWNER/llvm-snapshots-reproducer:${{ matrix.arch }}" -f Containerfile.mass-rebuild scripts/
           podman login -u ${{ github.actor }} -p "$GITHUB_TOKEN" ghcr.io
           podman push "ghcr.io/$GITHUB_REPOSITORY_OWNER/llvm-snapshots-reproducer:${{ matrix.arch }}"
