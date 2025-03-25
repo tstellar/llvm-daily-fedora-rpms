@@ -12,6 +12,13 @@ jobs:
   build-reproducer-container:
     if: github.repository_owner == 'fedora-llvm-team'
     runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        arch:
+          - aarch64
+          - ppc64le
+          - s390x
+          - x86_64
     permissions:
       packages: write
     steps:
@@ -22,6 +29,6 @@ jobs:
         run: |
           sudo apt-get -y update
           sudo apt-get -y install podman
-          podman build -t "ghcr.io/$GITHUB_REPOSITORY_OWNER/llvm-snapshots-reproducer" -f Containerfile.mass-rebuild scripts/
+          podman build --arch ${{ matrix.arch }} -t "ghcr.io/$GITHUB_REPOSITORY_OWNER/llvm-snapshots-reproducer:${{ matrix.arch }}" -f Containerfile.mass-rebuild scripts/
           podman login -u ${{ github.actor }} -p "$GITHUB_TOKEN" ghcr.io
-          podman push "ghcr.io/$GITHUB_REPOSITORY_OWNER/llvm-snapshots-reproducer"
+          podman push "ghcr.io/$GITHUB_REPOSITORY_OWNER/llvm-snapshots-reproducer:${{ matrix.arch }}"
