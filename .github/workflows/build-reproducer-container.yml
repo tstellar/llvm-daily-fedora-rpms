@@ -35,7 +35,7 @@ jobs:
               ;;
           esac
 
-          if [ -n "$llvm_container_arch ]; then
+          if [ -n "$llvm_container_arch" ]; then
             extra_args="--optimized_llvm=ghcr.io/llvm/$llvm_container_arch/ci-ubuntu-22.04:9f919661dd2f --llvm_sysroot=/opt/llvm/"
           fi
 
