@@ -9,6 +9,28 @@ function get_clang_commit {
   curl "https://download.copr.fedorainfracloud.org/results/@fedora-llvm-team/fedora-41-clang-21/fedora-41-x86_64/0$buildid-$pkg/root.log.gz" | gunzip |  grep -o 'clang[[:space:]]\+x86_64[[:space:]]\+[0-9a-g~pre.]\+' | cut -d 'g' -f 3
 }
 
+function get_clang_copr_project {
+  buildid=$1
+  pkg=$2
+  arch=$(rpm --eval %{_arch})
+
+  date=$(curl "https://download.copr.fedorainfracloud.org/results/@fedora-llvm-team/fedora-41-clang-21/fedora-41-$arch/0$buildid-$pkg/root.log.gz" | gunzip |  grep -o "clang[[:space:]]\+$arch[[:space:]]\+[0-9.]\+~pre[0-9]\+" | cut -d '~' -f 2 | sed 's/pre//g')
+  echo "@fedora-llvm-team/llvm-snapshots-big-merge-$date"
+}
+
+function configure_llvm {
+  cmake -G Ninja -B build -S llvm -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_PROJECTS=clang -DLLVM_TARGETS_TO_BUILD=Native -DLLVM_BINUTILS_INCDIR=/usr/include/ -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER=/opt/llvm/bin/clang++ -DCMAKE_C_COMPILER=/opt/llvm/bin/clang
+
+}
+
+function copr_project_exists {
+  project=$1
+  owner=$(echo $project | cut -d '/' -f 1)
+  name=$(echo $project | cut -d '/' -f 2)
+
+  curl -f -X 'GET' "https://copr.fedorainfracloud.org/api_3/project/?ownername=$owner&projectname=$name"   -H 'accept: application/json'
+}
+
 
 pkg_or_buildid=$1
 
@@ -37,22 +59,44 @@ srpm_name=$(basename $srpm_url)
 dnf builddep -y $srpm_name
 
 # Test the good commit to see if this a false positive
-git checkout $good_commit
-
-cmake -G Ninja -B build -S llvm -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_PROJECTS=clang -DLLVM_TARGETS_TO_BUILD=Native -DLLVM_BINUTILS_INCDIR=/usr/include/ -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER=/opt/llvm/bin/clang++ -DCMAKE_C_COMPILER=/opt/llvm/bin/clang
-
-if ! ./git-bisect-script.sh $srpm_name; then
-  echo "False Positive."
-  exit 1
+good_copr_project=$(get_clang_copr_project $last_success_id $pkg)
+if copr_project_exists $good_copr_project; then
+  dnf copr enable -y $good_copr_project
+  dnf install -y clang
+  dnf reinstall -y clang
+  if ! rpmbuild -D '%toolchain clang' -rb $srpm_name; then
+    echo "False Positive."
+    exit 1
+  fi
+else
+  git checkout $good_commit
+  configure_llvm
+  if ! ./git-bisect-script.sh $srpm_name; then
+    echo "False Positive."
+    exit 1
+  fi
 fi
 
-git checkout $bad_commit
-# Test the bad commit to see if this a false positive
-if ./git-bisect-script.sh $srpm_name; then
-  echo "False Positive."
-  exit 1
+bad_copr_project=$(get_clang_copr_project $buildid $pkg)
+if copr_project_exists $bad_copr_project; then
+  dnf copr enable -y $bad_copr_project
+  dnf install -y clang
+  dnf reinstall -y clang
+  if rpmbuild -D '%toolchain clang' -rb $srpm_name; then
+    echo "False Positive."
+    exit 1
+  fi
+else
+  git checkout $bad_commit
+  configure_llvm
+  # Test the bad commit to see if this a false positive
+  if ./git-bisect-script.sh $srpm_name; then
+    echo "False Positive."
+    exit 1
+  fi
 fi
 
+configure_llvm
 git bisect start
 git bisect good $good_commit
 git bisect bad $bad_commit
