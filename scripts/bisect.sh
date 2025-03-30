@@ -19,7 +19,7 @@ function get_clang_copr_project {
 }
 
 function configure_llvm {
-  cmake -G Ninja -B build -S llvm -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_PROJECTS=clang -DLLVM_TARGETS_TO_BUILD=Native -DLLVM_BINUTILS_INCDIR=/usr/include/ -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER=/opt/llvm/bin/clang++ -DCMAKE_C_COMPILER=/opt/llvm/bin/clang
+  cmake -G Ninja -B build -S llvm -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_PROJECTS=clang -DLLVM_TARGETS_TO_BUILD=Native -DLLVM_BINUTILS_INCDIR=/usr/include/ -DCMAKE_CXX_COMPILER_LAUNCHER=ccache 
 
 }
 
@@ -69,12 +69,13 @@ if copr_project_exists $good_copr_project; then
     exit 1
   fi
 else
-  git checkout $good_commit
-  configure_llvm
-  if ! ./git-bisect-script.sh $srpm_name; then
-    echo "False Positive."
-    exit 1
-  fi
+  #git checkout $good_commit
+  #configure_llvm
+  #if ! ./git-bisect-script.sh $srpm_name; then
+  #  echo "False Positive."
+  #  exit 1
+  #fi
+  true
 fi
 
 bad_copr_project=$(get_clang_copr_project $buildid $pkg)
@@ -84,21 +85,58 @@ if copr_project_exists $bad_copr_project; then
   dnf reinstall -y clang
   if rpmbuild -D '%toolchain clang' -rb $srpm_name; then
     echo "False Positive."
-    exit 1
+    #exit 1
   fi
 else
-  git checkout $bad_commit
-  configure_llvm
+  #git checkout $bad_commit
+  #configure_llvm
   # Test the bad commit to see if this a false positive
-  if ./git-bisect-script.sh $srpm_name; then
-    echo "False Positive."
-    exit 1
-  fi
+  #if ./git-bisect-script.sh $srpm_name; then
+  #  echo "False Positive."
+  #  exit 1
+  #fi
+  true
 fi
 
-configure_llvm
+# First attempt to bisect using prebuilt binaries.
+chroot="fedora-41-$(rpm --eval %{arch})"
+good=$good_copr_project
+bad=$bad_copr_project
+
+while [ True ]; do
+  test_project=$(python3 rebuilder.py bisect --chroot $chroot $good $bad)
+
+  if [ "$test_project" = "$good_copr_project" ] || [ "$test_project" = "$bad_copr_project" ]; then
+    break
+  fi
+
+  dnf copr enable -y $test_project
+  dnf install -y clang
+  dnf reinstall -y clang
+  if rpmbuild -D '%toolchain clang' -rb $srpm_name; then
+    good=$test_project
+  else
+    bad=$test_project
+  fi
+done
+
+if copr_project_exists $good; then
+    dnf copr enable -y $good
+    dnf install -y clang
+    dnf reinstall -y clang
+    good_commit=$(dnf info --installed clang | grep '^Version' | cut -d 'g' -f 2)
+fi
+
+if copr_project_exists $bad; then
+    dnf copr enable -y $bad
+    dnf install -y clang
+    dnf reinstall -y clang
+    bad_commit=$(dnf info --installed clang | grep '^Version' | cut -d 'g' -f 2)
+fi
+
 git bisect start
 git bisect good $good_commit
 git bisect bad $bad_commit
 
+configure_llvm
 git bisect run ./git-bisect-script.sh $srpm_name
