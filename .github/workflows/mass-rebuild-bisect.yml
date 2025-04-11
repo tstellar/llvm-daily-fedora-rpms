@@ -42,7 +42,6 @@ on:
 
 jobs:
   mass-rebuild-bisect-setup:
-    if: github.repository_owner == 'fedora-llvm-team'
     runs-on: ubuntu-24.04
     outputs:
       runs-on: ${{ steps.vars.outputs.runs-on }}
