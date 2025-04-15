@@ -430,7 +430,7 @@ def main():
     target_arches = ["aarch64", "ppc64le", "s390x", "x86_64"]
     target_chroots = [f"{os_name}-{a}" for a in target_arches]
     project_owner = "@fedora-llvm-team"
-    project_name = f"{os_name}-clang-{clang_version}"
+    project_name = "clang-monthly-fedora-rebuild"#f"{os_name}-clang-{clang_version}"
 
     if args.command == "rebuild":
         exclusions = get_exclusions()
