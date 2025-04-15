@@ -11,7 +11,6 @@ permissions:
 
 jobs:
   check-for-rebuild:
-    if: github.repository_owner == 'fedora-llvm-team'
     runs-on: ubuntu-24.04
     container:
       image: "registry.fedoraproject.org/fedora:41"
@@ -45,7 +44,8 @@ jobs:
               return 0;
             const issue = issues.data.items[0];
             console.log(issue);
-            return issue.created_at
+            return "2025-04-02"
+            //return issue.created_at
 
       - name: Check if a new rebuild has completed
         id: new-rebuild
@@ -73,9 +73,10 @@ jobs:
         run: |
           python3 scripts/rebuilder.py get-regressions --start-date ${{ steps.last-report.outputs.result }} > regressions
           echo "REGRESSIONS=$(cat regressions)" >> "$GITHUB_OUTPUT"
+          cat regressions
 
   rebuild-failures:
-    if: >- github.repository_owner == 'fedora-llvm-team' &&
+    if: >- 
            needs.check-for-rebuild.outputs.rebuild-completed == 'true'
     runs-on: ubuntu-22.04
     needs:
@@ -168,7 +169,6 @@ jobs:
             core.setOutput("issue-id", issue.data.number)
 
   bisect-failures:
-    if: github.repository_owner == 'fedora-llvm-team'
     needs:
       - check-for-rebuild
       - create-report
@@ -186,7 +186,7 @@ jobs:
       issue: ${{ needs.create-report.outputs.issue-id }}
 
   notify-bisect-complete:
-    if: always() && github.repository_owner == 'fedora-llvm-team'
+    if: always()
     runs-on: ubuntu-24.04
     needs:
       - check-for-rebuild
