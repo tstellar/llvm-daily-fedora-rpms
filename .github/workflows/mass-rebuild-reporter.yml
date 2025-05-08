@@ -92,13 +92,6 @@ jobs:
           mkdir -p ~/.config
           echo "$COPR_CONFIG_FILE" > ~/.config/copr
 
-      - run: |
-          sudo dnf install -y copr-cli jq
-          copr build-distgit \
-            --commit "$(copr get-package  --name ${{ matrix.name }} @fedora-llvm-team/clang-monthly-fedora-rebuild | jq -r .source_dict.committish)" \
-            --name "${{ matrix.name }}" \
-            @fedora-llvm-team/clang-monthly-fedora-rebuild \
-            || true
 
   create-report:
     name: "Create Report"
