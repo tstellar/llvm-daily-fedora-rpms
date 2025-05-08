@@ -68,7 +68,6 @@ jobs:
 
   rebuild-failures:
     if: >-
-      github.repository_owner == 'fedora-llvm-team' &&
       needs.check-for-rebuild.outputs.rebuild-completed == 'true'
     runs-on: ubuntu-22.04
     needs:
