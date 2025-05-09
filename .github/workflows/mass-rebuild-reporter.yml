@@ -115,7 +115,7 @@ jobs:
         id: regressions
         run: |
           sudo dnf install -y python3-dnf python3-copr python3-koji
-          python3 scripts/rebuilder.py get-regressions --start-date ${{ needs.check-for-rebuild.outputs.last-report }} > regressions
+          python3 scripts/rebuilder.py get-regressions --start-date 2025-04-04 > regressions
           echo "REGRESSIONS=$(cat regressions)" >> "$GITHUB_OUTPUT"
 
       - name: Create Report
