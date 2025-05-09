@@ -82,7 +82,7 @@ jobs:
           max-size: 8G
           key: bisect
       - working-directory: /root/llvm-project/
-        if: needs.mass-rebuild-bisect-steup.outputs.emulated == 'false'
+        if: needs.mass-rebuild-bisect-setup.outputs.emulated == 'false'
         run: |
           git fetch origin
           bash bisect.sh ${{ inputs.pkg }}
