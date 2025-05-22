@@ -94,8 +94,9 @@ def test_with_copr_builds(copr_project: str, test_command: str):
     print(test_command)
     #test_command = "git -C /root/llvm-project merge-base --is-ancestor HEAD 6cac792bf9eacb1ed0c80fc7c767fc99c50e252"
     print(test_command)
-    os.system(test_command)
-    return False
+    success = os.WIFEXITED(os.system(test_command)) == 0
+    print("{} project".format("Good" if success else "Bad")
+    return success
 
 def git_bisect(repo: git.Repo, good_commit: str, bad_commit: str, test_command: str):
     print("Running git bisect with {good_commit} and {bad_commit}")
