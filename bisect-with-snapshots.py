@@ -95,7 +95,7 @@ def test_with_copr_builds(copr_project: str, test_command: str):
     #test_command = "git -C /root/llvm-project merge-base --is-ancestor HEAD 6cac792bf9eacb1ed0c80fc7c767fc99c50e252"
     print(test_command)
     success = os.WIFEXITED(os.system(test_command)) == 0
-    print("{} project".format("Good" if success else "Bad")
+    print("{} project".format("Good" if success else "Bad"))
     return success
 
 def git_bisect(repo: git.Repo, good_commit: str, bad_commit: str, test_command: str):
@@ -115,11 +115,12 @@ def main():
     parser.add_argument('--bad-commit')
     parser.add_argument('--llvm-project-dir')
     parser.add_argument('--test-command')
+    parser.add_argument('--chroot')
     args = parser.parse_args()
 
-    repo = git.Repo("/root/llvm-project/")
+    repo = git.Repo(args.llvm_project_dir)
 
-    chroot = "fedora-rawhide-x86_64"
+    chroot = args.chroot
     projects = get_snapshot_projects()
     oldest_project = None
     newest_project = None
