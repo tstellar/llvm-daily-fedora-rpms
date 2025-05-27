@@ -99,7 +99,7 @@ def test_with_copr_builds(copr_project: str, test_command: str):
     return success
 
 def git_bisect(repo: git.Repo, good_commit: str, bad_commit: str, test_command: str):
-    print("Running git bisect with {good_commit} and {bad_commit}")
+    print(f"Running git bisect with {good_commit} and {bad_commit}")
     print(test_command)
     repo.git.bisect("start", bad_commit, good_commit)
     repo.git.bisect("run", test_command.split())
