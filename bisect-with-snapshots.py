@@ -5,7 +5,6 @@ import git
 import dnf
 import dnf.cli
 import sys
-import os
 import subprocess
 
 class CoprProject:
@@ -75,7 +74,7 @@ def test_with_copr_builds(copr_project: str, test_command: str):
     # Enable the copr repo that we want to test.
     # FIXME: There is probably some way to do this via the python API, but I
     # can't figure it out.
-    os.system(f"dnf copr enable -y {copr_fullname}")
+    subprocess.run(f"dnf copr enable -y {copr_fullname}", stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     # Install clang and llvm builds to test
     with dnf.Base() as base:
         base.read_all_repos()
@@ -89,12 +88,13 @@ def test_with_copr_builds(copr_project: str, test_command: str):
     # Disable project so future installs don't use it.
     # FIXME: There is probably some way to do this via the python API, but I
     # can't figure it out.
-    os.system(f"dnf copr disable -y {copr_fullname}")
+    subprocess.run(f"dnf copr disable -y {copr_fullname}", stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     print(test_command)
     #test_command = "git -C /root/llvm-project merge-base --is-ancestor HEAD 6cac792bf9eacb1ed0c80fc7c767fc99c50e252"
     print(test_command)
-    success = os.WIFEXITED(os.system(test_command)) == 0
+    p = subprocess.run(test_command)
+    success = True if p.returncode == 0 else False
     print("{} project".format("Good" if success else "Bad"))
     return success
 
