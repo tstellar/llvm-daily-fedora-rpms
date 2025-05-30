@@ -101,8 +101,9 @@ def test_with_copr_builds(copr_project: str, test_command: str):
 def git_bisect(repo: git.Repo, good_commit: str, bad_commit: str, test_command: str):
     print(f"Running git bisect with {good_commit} and {bad_commit}")
     print(test_command)
-    repo.git.bisect("start", bad_commit, good_commit)
-    repo.git.bisect("run", test_command.split())
+    # Use subprocess.run here instead of builtin commands so we can stream output.
+    subprocess.run(f"git bisect start {bad_commit} {good_commit}", stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    subprocess.run(f"git bisect run {test_command}", stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     print(repo.git.bisect("log"))
     repo.git.bisect("reset")
     return True
