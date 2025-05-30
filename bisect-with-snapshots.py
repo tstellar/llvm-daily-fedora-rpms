@@ -88,7 +88,7 @@ def test_with_copr_builds(copr_project: str, test_command: str):
     # Disable project so future installs don't use it.
     # FIXME: There is probably some way to do this via the python API, but I
     # can't figure it out.
-    subprocess.run(f["dnf", "copr", "disable", "-y", copr_fullname])
+    subprocess.run(["dnf", "copr", "disable", "-y", copr_fullname])
 
     print(test_command)
     #test_command = "git -C /root/llvm-project merge-base --is-ancestor HEAD 6cac792bf9eacb1ed0c80fc7c767fc99c50e252"
