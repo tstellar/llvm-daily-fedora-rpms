@@ -74,7 +74,7 @@ def test_with_copr_builds(copr_project: str, test_command: str):
     # Enable the copr repo that we want to test.
     # FIXME: There is probably some way to do this via the python API, but I
     # can't figure it out.
-    subprocess.run(f"dnf copr enable -y {copr_fullname}", stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    subprocess.run(f"dnf copr enable -y {copr_fullname}")
     # Install clang and llvm builds to test
     with dnf.Base() as base:
         base.read_all_repos()
@@ -88,7 +88,7 @@ def test_with_copr_builds(copr_project: str, test_command: str):
     # Disable project so future installs don't use it.
     # FIXME: There is probably some way to do this via the python API, but I
     # can't figure it out.
-    subprocess.run(f"dnf copr disable -y {copr_fullname}", stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    subprocess.run(f"dnf copr disable -y {copr_fullname}")
 
     print(test_command)
     #test_command = "git -C /root/llvm-project merge-base --is-ancestor HEAD 6cac792bf9eacb1ed0c80fc7c767fc99c50e252"
@@ -102,10 +102,9 @@ def git_bisect(repo: git.Repo, good_commit: str, bad_commit: str, test_command: 
     print(f"Running git bisect with {good_commit} and {bad_commit}")
     print(test_command)
     # Use subprocess.run here instead of builtin commands so we can stream output.
-    subprocess.run(["git", "bisect", "start", bad_commit, good_commit], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    subprocess.run(["git", "bisect", "run"] + test_command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    subprocess.run(["git", "bisect", "start", bad_commit, good_commit])
+    subprocess.run(["git", "bisect", "run"] + test_command.split()])
     print(repo.git.bisect("log"))
-    repo.git.bisect("reset")
     return True
 
 
