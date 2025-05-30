@@ -103,7 +103,7 @@ def git_bisect(repo: git.Repo, good_commit: str, bad_commit: str, test_command: 
     print(test_command)
     # Use subprocess.run here instead of builtin commands so we can stream output.
     subprocess.run(["git", "bisect", "start", bad_commit, good_commit])
-    subprocess.run(["git", "bisect", "run"] + test_command.split()])
+    subprocess.run(["git", "bisect", "run"] + test_command.split())
     print(repo.git.bisect("log"))
     return True
 
