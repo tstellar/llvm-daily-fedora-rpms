@@ -93,7 +93,7 @@ def test_with_copr_builds(copr_project: str, test_command: str):
     print(test_command)
     #test_command = "git -C /root/llvm-project merge-base --is-ancestor HEAD 6cac792bf9eacb1ed0c80fc7c767fc99c50e252"
     print(test_command)
-    p = subprocess.run(test_command)
+    p = subprocess.run(test_command.split())
     success = True if p.returncode == 0 else False
     print("{} project".format("Good" if success else "Bad"))
     return success
