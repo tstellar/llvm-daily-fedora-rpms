@@ -116,7 +116,7 @@ def git_bisect(repo: git.Repo, good_commit: str, bad_commit: str, configure_comm
               exit 125
             fi
             {test_command}
-        """
+        """)
         subprocess.run(["git", "-C", repo.working_tree_dir, "bisect", "run", "/usr/bin/bash", biscect_script.name])
     print(repo.git.bisect("log"))
     return True
