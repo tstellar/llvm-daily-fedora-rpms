@@ -110,7 +110,7 @@ def git_bisect(repo: git.Repo, good_commit: str, bad_commit: str, configure_comm
 
     # Use subprocess.run here instead of builtin commands so we can stream output.
     subprocess.run(["git", "-C", repo.working_tree_dir, "bisect", "start", bad_commit, good_commit])
-    with tempfile.NamedTemporaryFile() as bisect_script:
+    with tempfile.NamedTemporaryFile(mode='w+') as bisect_script:
         bisect_script.write(f"""
             if ! {build_command}; then
               exit 125
