@@ -139,62 +139,61 @@ def main():
 
     chroot = args.chroot
     projects = get_snapshot_projects()
-    oldest_project = None
-    newest_project = None
     good_project = None
     bad_project = None
+
+    # Find for the oldest COPR project that is newer than the good commit.
     for p in projects:
         p.commit = get_clang_commit_for_snapshot_project(p.name, chroot)
         try: 
-            print("git merge-base --is-ancestor ", args.good_commit, p.commit)
             repo.git.merge_base('--is-ancestor', args.good_commit, p.commit)
-            oldest_project = p
-            break
         except:
             continue
-    print(oldest_project.commit, oldest_project.name, oldest_project.index, "/", len(projects))
+        print(p.commit, p.name, p.index, "/", len(projects))
 
-    # Test with oldest copr commit.
-    if not test_with_copr_builds(oldest_project.name, args.test_command):
-        # The oldest commit was a 'bad' commit so we can use that as our
-        # 'bad' commit for bisecting.
-        return git_bisect(repo, args.good_commit, oldest_project.commit, args.test_command)
-    else:
-        good_project = oldest_project
+        if not test_with_copr_builds(p.name, args.test_command):
+            # The oldest commit was a 'bad' commit so we can use that as our
+            # 'bad' commit for bisecting.
+            return git_bisect(repo, args.good_commit, p.commit, args.configure_command, args.build_command, args.test_command)
+        good_project = p
+        break
 
-    # Look for the newest COPR project.
+    # Find the newest COPR project that is older than the bad commit.
     for p in reversed(projects):
         p.commit = get_clang_commit_for_snapshot_project(p.name, chroot)
         try: 
             repo.git.merge_base('--is-ancestor', p.commit, args.bad_commit)
-            newest_project = p
-            break
         except:
             continue
-    
-    print (newest_project.commit, newest_project.name, newest_project.index, "/", len(projects))
+        print(p.commit, p.name, p.index, "/", len(projects))
+        
+        # We found a project, so test it.
+        if test_with_copr_builds(p.name, args.test_command):
+            # The newest commit was a 'good' commit, so we can use that as our
+            # good commit for testing.
+            return git_bisect(repo, p.commit, p.bad_commit, args.configure_command, args.build_command, args.test_command)
+        bad_project = p
+        break
 
-    # Test with the newest copr commit
-    if test_with_copr_builds(newest_project.name, args.test_command):
-        # The newest commit was a 'good' commit, so we can use that as our
-        # good commit for testing.
-        return git_bisect(repo, newest_project.commit, args.bad_commit, args.test_command)
-    else:
-        bad_project = newest_project
 
     # Bisect using copr builds
-    while good_project.index + 1 < bad_project.index:
-        test_project = projects[(good_project.index + bad_project.index) / 2]
-        print(f"Testing: {test_project.name} - {test_project.commit}")
-        if test_with_copr_builds(test_project.name, args.test_command):
-            print("Good")
-            good_project = test_project
-        else:
-            print("Bad")
-            bad_project = test_project
+    if good_project and bad_project:
+        while good_project.index + 1 < bad_project.index:
+            test_project = projects[(good_project.index + bad_project.index) / 2]
+            print(f"Testing: {test_project.name} - {test_project.commit}")
+            if test_with_copr_builds(test_project.name, args.test_command):
+                print("Good")
+                good_project = test_project
+            else:
+                print("Bad")
+                bad_project = test_project
+    if good_project:
+        args.good_commit = good_project.commit
+    if bad_project:
+        args.bad_commit = bad_project.commit
 
     # Bisect the rest of the way using git.
-    return git_bisect(repo, good_project.commit, bad_project.commit, args.test_command)
+    return git_bisect(repo, args.good_commit, args.bad_commit, args.configure_command, args.build_command, args.test_command)
 
 
 if __name__ == "__main__":
