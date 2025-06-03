@@ -113,6 +113,7 @@ def git_bisect(repo: git.Repo, good_commit: str, bad_commit: str, configure_comm
     with tempfile.NamedTemporaryFile(mode='w+', delete = False) as bisect_script:
         print(f"""
             set -x
+            pwd
             if ! {build_command}; then
               exit 125
             fi
