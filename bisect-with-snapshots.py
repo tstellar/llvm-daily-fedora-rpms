@@ -128,7 +128,7 @@ def git_bisect(repo: git.Repo, good_commit: str, bad_commit: str, configure_comm
         """)
         # Use the cwd argument instead of passing -C to git, so that the bisect script is
         # run in the llvm-project directory.
-        subprocess.run(["git", "bisect", "run", "/usr/bin/bash", bisect_script.name], cwd = repo.working_tree_dir)
+        subprocess.run(["git", "bisect", "run", "/usr/bin/bash", bisect_script.name], cwd = repo.working_tree_dir, shell = True)
     print(repo.git.bisect("log"))
     return True
 
