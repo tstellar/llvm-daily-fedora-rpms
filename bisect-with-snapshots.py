@@ -128,7 +128,7 @@ def main():
     parser.add_argument('--good-commit')
     parser.add_argument('--bad-commit')
     parser.add_argument('--llvm-project-dir')
-    parser.add_argument('--configure-command', default = "cmake -G Ninja -B build -DCMAKE_BUILD_TYPE=Release -DLLVM_TARGETS_TO_BUILD=Native -DLLVM_ENABLE_PROJECTS=clang -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache")
+    parser.add_argument('--configure-command', default = "cmake -S llvm -G Ninja -B build -DCMAKE_BUILD_TYPE=Release -DLLVM_TARGETS_TO_BUILD=Native -DLLVM_ENABLE_PROJECTS=clang -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache")
     parser.add_argument('--build-command', default = "ninja -C build install-clang install-clang-resource-headers install-LLVMgold install-llvm-ar install-llvm-ranlib")
     parser.add_argument('--test-command')
     parser.add_argument('--srpm')
