@@ -13,25 +13,29 @@ class CoprProject:
     GOOD = 1
     BAD = 2
 
-    def __init__(self, name):
+    def __init__(self, name, commit):
         self.name = name
         self.index = -1
-        self._commit = None
+        self.commit = commit
         self._status = CoprProject.UNTESTED
 
     def __lt__(self, other):
         return self.name < other.name
 
 
-def get_snapshot_projects(chroot: str = None) -> list[str]:
+def get_snapshot_projects(chroot: str) -> list[str]:
     copr_client = copr.v3.Client.create_from_config_file()
     projects = []
     for p in copr_client.project_proxy.get_list(ownername='@fedora-llvm-team'):
+        print(p)
         if not re.match(r"llvm-snapshots-big-merge-[0-9]+", p.name):
             continue
         if chroot and chroot not in list(p.chroot_repos.keys()):
             continue
-        projects.append(CoprProject(p.name))
+        new_project = CoprProject(p.name, get_clang_commit_for_snapshot_project(p.name, chroot))
+        if not new_project.commit:
+            continue
+        projects.append(new_project)
     projects.sort()
     for idx, p in enumerate(projects):
         p.index = idx 
@@ -42,13 +46,16 @@ def get_clang_commit_for_snapshot_project(project_name: str, chroot: str) -> str
     copr_client = copr.v3.Client.create_from_config_file()
 
     builds = copr_client.build_proxy.get_list('@fedora-llvm-team', project_name, packagename="llvm", status="succeeded")
+    print(f"Gettting commit for {project_name}", builds)
     regex = re.compile("llvm-[0-9.]+~pre[0-9]+.g([0-9a-f]+)")
     for  b in builds:
         if chroot in b["chroots"]:
-            print(b)
+            print("Regex name: ", b["source_package"]["url"])
             m = regex.search(b["source_package"]["url"])
             if m:
                 return m.group(1)
+    # Usually this means that there was no succesful build for this chroot.
+    print(f"Can't find commit for {project_name}")
     return None
 
 
@@ -77,12 +84,14 @@ def test_with_copr_builds(copr_project: str, test_command: str):
     # can't figure it out.
     subprocess.run(["dnf", "copr", "enable", "-y", copr_fullname])
     # Install clang and llvm builds to test
+    dnf.conf.Conf.best = True
     with dnf.Base() as base:
         base.read_all_repos()
         base.fill_sack()
         for r in rpms:
             base.install(r)
         base.resolve(allow_erasing=True)
+        print(base.transaction.install_set)
         base.download_packages(base.transaction.install_set)
         base.do_transaction()
 
@@ -94,7 +103,9 @@ def test_with_copr_builds(copr_project: str, test_command: str):
     print(test_command)
     #test_command = "git -C /root/llvm-project merge-base --is-ancestor HEAD 6cac792bf9eacb1ed0c80fc7c767fc99c50e252"
     print(test_command)
-    p = subprocess.run(test_command.split())
+    print(test_command.split())
+    p = subprocess.run(test_command, shell=True)
+    print(p)
     success = True if p.returncode == 0 else False
     print("{} project".format("Good" if success else "Bad"))
     return success
@@ -111,24 +122,22 @@ def git_bisect(repo: git.Repo, good_commit: str, bad_commit: str, configure_comm
     # Use subprocess.run here instead of builtin commands so we can stream output.
     subprocess.run(["git", "-C", repo.working_tree_dir, "bisect", "start", bad_commit, good_commit])
     with tempfile.NamedTemporaryFile(mode='w+', delete = False) as bisect_script:
-        print(f"""
-            set -x
-            pwd
-            if ! {build_command}; then
-              exit 125
-            fi
-            {test_command}
-        """)
         bisect_script.write(f"""
-            set -x
+            set -ex
+            pwd
+            echo "Trying build command"
             if ! {build_command}; then
+              echo "exit 125"
               exit 125
             fi
             {test_command}
         """)
+        bisect_script.flush()
         # Use the cwd argument instead of passing -C to git, so that the bisect script is
         # run in the llvm-project directory.
-        subprocess.run(["git", "bisect", "run", "/usr/bin/bash", bisect_script.name], cwd = repo.working_tree_dir, shell = True)
+        #os.chdir(repo.working_tree_dir)
+        print(repo.working_tree_dir)
+        subprocess.run(["git", "bisect", "run", "/usr/bin/bash", "--verbose", bisect_script.name], cwd = repo.working_tree_dir)
     print(repo.git.bisect("log"))
     return True
 
@@ -139,7 +148,7 @@ def main():
     parser.add_argument('--good-commit')
     parser.add_argument('--bad-commit')
     parser.add_argument('--llvm-project-dir')
-    parser.add_argument('--configure-command', default = "cmake -S llvm -G Ninja -B build -DCMAKE_BUILD_TYPE=Release -DLLVM_TARGETS_TO_BUILD=Native -DLLVM_ENABLE_PROJECTS=clang -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache")
+    parser.add_argument('--configure-command', default = "cmake -S llvm -G Ninja -B build -DCMAKE_BUILD_TYPE=Release -DLLVM_TARGETS_TO_BUILD=Native -DLLVM_ENABLE_PROJECTS=clang -DLLVM_BINUTILS_INCDIR=/usr/include/ -DENABLE_LINKER_BUILD_ID=ON")
     parser.add_argument('--build-command', default = "ninja -C build install-clang install-clang-resource-headers install-LLVMgold install-llvm-ar install-llvm-ranlib")
     parser.add_argument('--test-command')
     parser.add_argument('--srpm')
@@ -149,13 +158,12 @@ def main():
     repo = git.Repo(args.llvm_project_dir)
 
     chroot = args.chroot
-    projects = get_snapshot_projects()
+    projects = get_snapshot_projects(chroot)
     good_project = None
     bad_project = None
 
     # Find for the oldest COPR project that is newer than the good commit.
     for p in projects:
-        p.commit = get_clang_commit_for_snapshot_project(p.name, chroot)
         try: 
             repo.git.merge_base('--is-ancestor', args.good_commit, p.commit)
         except:
@@ -171,7 +179,6 @@ def main():
 
     # Find the newest COPR project that is older than the bad commit.
     for p in reversed(projects):
-        p.commit = get_clang_commit_for_snapshot_project(p.name, chroot)
         try: 
             repo.git.merge_base('--is-ancestor', p.commit, args.bad_commit)
         except:
@@ -190,7 +197,7 @@ def main():
     # Bisect using copr builds
     if good_project and bad_project:
         while good_project.index + 1 < bad_project.index:
-            test_project = projects[(good_project.index + bad_project.index) / 2]
+            test_project = projects[int((good_project.index + bad_project.index) / 2)]
             print(f"Testing: {test_project.name} - {test_project.commit}")
             if test_with_copr_builds(test_project.name, args.test_command):
                 print("Good")
