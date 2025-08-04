@@ -27,7 +27,6 @@ def get_snapshot_projects(chroot: str) -> list[str]:
     copr_client = copr.v3.Client.create_from_config_file()
     projects = []
     for p in copr_client.project_proxy.get_list(ownername='@fedora-llvm-team'):
-        print(p)
         if not re.match(r"llvm-snapshots-big-merge-[0-9]+", p.name):
             continue
         if chroot and chroot not in list(p.chroot_repos.keys()):
@@ -46,7 +45,7 @@ def get_clang_commit_for_snapshot_project(project_name: str, chroot: str) -> str
     copr_client = copr.v3.Client.create_from_config_file()
 
     builds = copr_client.build_proxy.get_list('@fedora-llvm-team', project_name, packagename="llvm", status="succeeded")
-    print(f"Gettting commit for {project_name}", builds)
+    print(f"Gettting commit for {project_name}")
     regex = re.compile("llvm-[0-9.]+~pre[0-9]+.g([0-9a-f]+)")
     for  b in builds:
         if chroot in b["chroots"]:
@@ -107,7 +106,7 @@ def test_with_copr_builds(copr_project: str, test_command: str):
     p = subprocess.run(test_command, shell=True)
     print(p)
     success = True if p.returncode == 0 else False
-    print("{} project".format("Good" if success else "Bad"))
+    print("{}: {}".format(copr_project, "Good" if success else "Bad"))
     return success
 
 def git_bisect(repo: git.Repo, good_commit: str, bad_commit: str, configure_command: str, build_command: str, test_command: str):
