@@ -525,7 +525,7 @@ def select_snapshot_project(
     project_owner = "@fedora-llvm-team"
     for i in range(max_lookback_days):
         chroots = set()
-        day = datetime.date.today() - datetime.timedelta(days=i)
+        day = datetime.date.today() - datetime.timedelta(days=15) - datetime.timedelta(days=i)
         project_name = day.strftime("llvm-snapshots-big-merge-%Y%m%d")
         logging.info("Trying:", project_name)
         try:
@@ -784,6 +784,7 @@ def main() -> None:
                 continue
             else:
                 print(f"Using {snapshot_project_name} for {chroot}")
+            continue
             snapshot_url = f"copr://@fedora-llvm-team/{snapshot_project_name}"
             repos = []
             for r in copr_client.project_chroot_proxy.get(
@@ -807,6 +808,7 @@ def main() -> None:
                 chroot,
                 additional_repos=repos + [snapshot_url],
             )
+        sys.exit(0)
 
         centos_stream9_chroots = [
             c for c in centos_stream9_chroots if c in target_chroots
@@ -823,6 +825,7 @@ def main() -> None:
                 distgit="centos-stream",
                 chroots=centos_stream9_chroots,
             )
+            break
 
         centos_stream10_chroots = [
             c for c in centos_stream10_chroots if c in target_chroots
@@ -839,6 +842,7 @@ def main() -> None:
                 distgit="centos-stream",
                 chroots=centos_stream10_chroots,
             )
+            break
 
         fedora_chroots = [c for c in fedora_chroots if c in target_chroots]
 
@@ -867,6 +871,7 @@ def main() -> None:
                 build_tag=rawhide_tag,
                 chroots=fedora_chroots,
             )
+            break
 
 
 if __name__ == "__main__":
